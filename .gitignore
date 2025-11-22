@@ -1,0 +1,14 @@
+# Sensitive configuration
+config.py
+
+# Generated or runtime folders
+generated_files/
+uploads/
+workspace/
+
+# Database files
+*.db
+*.sqlite3
+
+# Virtual environment
+venv/
