@@ -9,6 +9,7 @@ import zipfile
 from io import BytesIO
 from flask import send_file
 from authlib.integrations.flask_client import OAuth
+import redis
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -34,6 +35,20 @@ _extracted_js = None
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis.from_url(
+    os.environ.get('REDIS_URL', 'redis://localhost:6379')
+)
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'vibelabs:'
+app.config['SESSION_COOKIE_SECURE'] = True  # Use HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Initialize Flask-Session
+Session(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
@@ -543,25 +558,23 @@ def login():
 
 @app.route("/auth/callback")
 def auth_callback():
-    """Handle Google OAuth callback"""
     try:
         token = google.authorize_access_token()
-        
-        # Get user info from token
         resp = google.get('https://openidconnect.googleapis.com/v1/userinfo')
         user_info = resp.json()
         
         if user_info:
             user = get_or_create_user(
                 user_info['email'], 
-                user_info.get('name', ''),
-                
+                user_info.get('name', '')
             )
+            
+            # ===== FIX: Store ONLY essential data in session =====
             session['user_id'] = user.id
             session['user_email'] = user.email
             session['user_name'] = user.name
             session['credits'] = user.credits
-            session['user_picture'] = user_info.get('picture', '')  # Store in session only, not DB
+            # Don't store user_picture in session - load it from user_info on demand
             
             return redirect(url_for('index'))
         else:
@@ -601,15 +614,19 @@ def github_login():
 
 @app.route("/auth/github/callback")
 def github_callback():
-    """Handle GitHub OAuth callback"""
     try:
         token = github.authorize_access_token()
-        session['github_token'] = token['access_token']
+        
+        # ===== FIX: Only store the token string, not the entire object =====
+        if isinstance(token, dict):
+            session['github_token'] = token.get('access_token', '')
+        else:
+            session['github_token'] = str(token)
         
         # Get GitHub user info
         resp = github.get('user', token=token)
         github_user = resp.json()
-        session['github_username'] = github_user['login']
+        session['github_username'] = github_user.get('login', '')
         
         print(f"✅ GitHub linked for user: {github_user['login']}")
         return redirect(url_for('main_page'))
@@ -709,15 +726,15 @@ def main_page():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
 
-    history = []
+    history = []  # Always load from database, never from session
 
     if user:
         session['credits'] = user.credits
         
-        # Only load history if there's an active project
         current_project_id = session.get('current_project_id')
         
         if current_project_id:
+            # Load history from DATABASE only
             chat_history = ChatHistory.query.filter_by(
                 user_id=user_id, 
                 project_id=current_project_id
@@ -727,12 +744,12 @@ def main_page():
                 history.append({
                     'prompt': chat.prompt,
                     'description': chat.response,
-                    'generated_code': chat.generated_code,
+                    'generated_code': chat.generated_code[:500] + '...',  # Truncate for display
                     'timestamp': chat.timestamp.isoformat() if chat.timestamp else None,
                     'created_files': chat.created_files
                 })
 
-    project_name = session.get('current_project_id', 'New Project')
+    project_name = session.get('current_project_name', 'New Project')
     return render_template("main.html", credits=session.get('credits', 10), history=history, project_name=project_name)
 
 
@@ -1077,9 +1094,9 @@ Make this look like a PREMIUM website from 2024!"""
         "was_modification": is_modification
     }
     
-    if 'history' not in session:
-        session['history'] = []
-    session['history'].append(record)
+    # if 'history' not in session:
+    #     session['history'] = []
+    # session['history'].append(record)
     
     # Save to database
     save_session_record(record, user_id, project_id)
