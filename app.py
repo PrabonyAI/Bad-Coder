@@ -13,7 +13,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY")
 SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -34,13 +33,11 @@ _extracted_css = None
 _extracted_js = None
 
 app = Flask(__name__)
-import os
 app.secret_key = os.getenv("SECRET_KEY")
 
-
 # Database configuration
-app.os.getenv['SQLALCHEMY_DATABASE_URI'] = os.getenv.SQLALCHEMY_DATABASE_URI
-app.os.getenv['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv.SQLALCHEMY_TRACK_MODIFICATIONS
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
 db.init_app(app)
