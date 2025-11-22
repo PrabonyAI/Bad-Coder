@@ -38,7 +38,7 @@ import os
 app.secret_key = os.getenv("SECRET_KEY")
 
 
-# Database os.getenvuration
+# Database configuration
 app.os.getenv['SQLALCHEMY_DATABASE_URI'] = os.getenv.SQLALCHEMY_DATABASE_URI
 app.os.getenv['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv.SQLALCHEMY_TRACK_MODIFICATIONS
 
@@ -46,7 +46,7 @@ app.os.getenv['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv.SQLALCHEMY_TRACK_MOD
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# OAuth os.getenvuration
+# OAuth configuration
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
@@ -58,8 +58,8 @@ google = oauth.register(
     }
 )
 
-# --- os.getenvuration ---
-genai.os.getenvure(api_key=os.getenv.GEMINI_API_KEY)
+# --- configuration ---
+genai.configure(api_key=os.getenv.GEMINI_API_KEY)
 model = genai.GenerativeModel("models/gemini-2.0-flash")
 
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -74,7 +74,7 @@ IMAGE_CATEGORIES = {
     "fitness": "gym,fitness,workout",
     "beauty": "cosmetics,makeup,beauty"
 }
-# --- End os.getenvuration ---
+# --- End configuration ---
 
 
 # --- Helper Functions ---
@@ -352,7 +352,7 @@ Generate compelling, realistic content that matches the page purpose!"""
     try:
         response = model.generate_content(
             [content_prompt],
-            generation_os.getenv={
+            generation_config={
                 "temperature": 0.8,
                 "max_output_tokens": 8192,
                 "top_p": 0.95,
@@ -846,7 +846,7 @@ Make this look like a PREMIUM website from 2024!"""
         # ===== CALL AI =====
         response = model.generate_content(
             [full_prompt],
-            generation_os.getenv={
+            generation_config={
                 "temperature": 0.9 if not is_modification else 0.7,
                 "max_output_tokens": 16384,
                 "top_p": 0.95,
