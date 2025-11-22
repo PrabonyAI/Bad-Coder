@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, send_from_directory, redirect, url_for
+from flask_session import Session
 import os, json, datetime, shutil
 import google.generativeai as genai
 import re
