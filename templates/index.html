@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bad Coder - Landing</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Burger Menu Overlay (for landing page) -->
+  <div id="projects-overlay" class="projects-overlay">
+    <div class="projects-overlay-content">
+      <div class="projects-header">
+        <h2><i class="fas fa-history"></i> Your Projects</h2>
+        <button class="close-overlay-btn" onclick="closeProjectsOverlay()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="projects-list" id="projects-list-overlay">
+        <div class="loading-projects">
+          <i class="fas fa-spinner fa-spin"></i> Loading projects...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Burger Menu Button (only shows when logged in) -->
+  {% if session.get('user_id') %}
+  <button class="burger-menu-btn" onclick="openProjectsOverlay()">
+    <i class="fas fa-bars"></i>
+  </button>
+  {% endif %}
+
+  <!-- Landing Page Strips Background -->
+  <div id="stripbox" class="stripbox">
+  <!-- Landing Page Strips Background -->
+  <div id="stripbox" class="stripbox">
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+    <div class="strip"></div>
+  </div>
+
+  <!-- Landing Page Content -->
+  <div id="landing-page" class="landing-page">
+    <nav class="landing-nav">
+      <div class="landing-nav-content">
+        <div class="brand-landing">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Bad Coder Logo" style="width: 48px;">
+          <span>Bad Coder</span>
+        </div>
+        <div class="nav-links">
+          <a href="#" class="nav-link">Community</a>
+          <a href="#" class="nav-link">Pricing</a>
+          <a href="#" class="nav-link">Enterprise</a>
+          
+          {% if session.get('user_id') %}
+            <!-- Logged In State -->
+            <div class="user-profile-container">
+              {% if session.get('user_picture') %}
+                <img src="{{ session.get('user_picture') }}" 
+                     alt="Profile" 
+                     class="user-profile-pic"
+                     title="{{ session.get('user_email', '') }}"
+                     onerror="this.src='https://ui-avatars.com/api/?name={{ session.get('user_name', 'User')|urlencode }}&background=4a9eff&color=fff'">
+              {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'User')|urlencode }}&background=4a9eff&color=fff" 
+                     alt="Profile" 
+                     class="user-profile-pic"
+                     title="{{ session.get('user_email', '') }}">
+              {% endif %}
+              <a href="{{ url_for('logout') }}" class="btn-landing-logout">
+                <i class="fas fa-sign-out-alt"></i>
+              </a>
+            </div>
+          {% else %}
+            <!-- Not Logged In State -->
+            <a href="{{ url_for('login') }}" class="btn-landing-start">
+              Get started
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <div class="landing-hero">
+      <h1 class="landing-title">
+        Let's Code with <img src="{{ url_for('static', filename='Frame 1.svg') }}" alt="Bad Coder Logo" style="width: 100px; margin-bottom: -16px; margin-left: -10px;">
+      </h1>
+      
+      <div class="landing-prompt-container">
+  <textarea 
+    id="landing-prompt" 
+    class="landing-prompt-input" 
+    placeholder="Ask Bad Coder to create an internal tool that..." 
+    rows="1"
+  ></textarea>
+
+    <!-- Attachments Preview Container -->
+  <div id="landing-attachments-preview" class="attachments-preview-container" style="display: none;">
+    <!-- Image previews will go here -->
+    <div id="landing-image-preview" class="image-preview-container" style="display: none;"></div>
+    <!-- Figma link will go here -->
+    <div id="landing-figma-preview" style="display: none;"></div>
+  </div>
+  
+  
+  <script>
+const sentences = [
+  "Build an E-commerce website",
+  "Build a smart phone website",
+  "Build a chating webapp",
+  "Build a Fashion website",
+  "Build a Food Delivery website"
+];
+
+const textarea = document.getElementById("landing-prompt");
+
+let sentenceIndex = 0;
+let charIndex = 0;
+let typing = true;
+
+function typeAnimation() {
+  const current = sentences[sentenceIndex];
+
+  if (typing) {
+    textarea.setAttribute("placeholder", current.slice(0, charIndex + 1));
+    charIndex++;
+
+    if (charIndex === current.length) {
+      typing = false;
+      setTimeout(typeAnimation, 1400);
+      return;
+    }
+  } else {
+    textarea.setAttribute("placeholder", current.slice(0, charIndex - 1));
+    charIndex--;
+
+    if (charIndex === 0) {
+      typing = true;
+      sentenceIndex = (sentenceIndex + 1) % sentences.length;
+    }
+  }
+
+  setTimeout(typeAnimation, typing ? 70 : 40);
+}
+
+textarea.classList.add("typing-cursor");
+typeAnimation();
+</script>
+
+  <div class="landing-prompt-actions">
+    <button id="landing-attach-btn" class="landing-attach-btn" title="Attach file">
+      <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Landing Page Attach Menu -->
+<div class="landing-attach-menu" id="landing-attach-menu">
+  <label class="landing-upload-label">
+  <i class="fas fa-image"></i> Upload Image
+  <input type="file" id="landing-image-input" accept="image/*" multiple hidden>
+</label>
+  
+  <div class="landing-figma-section">
+    <p class="landing-figma-label">Import Figma file</p>
+    <div class="landing-figma-input-group">
+      <input 
+        type="text" 
+        id="landing-figma-url-input" 
+        placeholder="Paste your figma file link here" 
+        class="landing-figma-url-box"
+      />
+      <button id="landing-figma-submit-btn" class="landing-figma-submit">
+        <i class="fas fa-arrow-circle-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+    <div class="landing-submit-group">
+      <button id="landing-voice-btn" class="landing-voice-btn" title="Voice input">
+        <i class="fas fa-microphone"></i>
+      </button>
+      <button id="landing-submit-btn" class="landing-submit-btn" title="Submit">
+        <i class="fas fa-arrow-up"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- Landing Page Specific Script -->
+<script>
+// Landing page functionality
+const landingPromptInput = document.getElementById('landing-prompt');
+const landingSubmitBtn = document.getElementById('landing-submit-btn');
+const landingAttachBtn = document.getElementById('landing-attach-btn');
+const landingAttachMenu = document.getElementById('landing-attach-menu');
+const landingImageInput = document.getElementById('landing-image-input');
+const landingFigmaInput = document.getElementById('landing-figma-url-input');
+const landingFigmaSubmitBtn = document.getElementById('landing-figma-submit-btn');
+const landingVoiceBtn = document.getElementById('landing-voice-btn');
+const landingImagePreview = document.getElementById('landing-image-preview');
+const landingFigmaPreview = document.getElementById('landing-figma-preview');
+const landingAttachmentsPreview = document.getElementById('landing-attachments-preview');
+
+let selectedLandingImages = [];
+let selectedFigmaUrl = '';
+
+// Auto-resize landing textarea
+if (landingPromptInput) {
+  landingPromptInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+  });
+  
+  landingPromptInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleLandingSubmit();
+    }
+  });
+}
+
+// Submit handler
+if (landingSubmitBtn) {
+  landingSubmitBtn.addEventListener('click', handleLandingSubmit);
+}
+
+async function handleLandingSubmit() {
+  const prompt = landingPromptInput.value.trim();
+  if (!prompt) return;
+  
+  sessionStorage.setItem('initialPrompt', prompt);
+  
+  // Store image count info
+  if (selectedLandingImages.length > 0) {
+    sessionStorage.setItem('hasImages', 'true');
+    sessionStorage.setItem('imageCount', selectedLandingImages.length.toString());
+  }
+  
+  // Store Figma URL if present
+  if (selectedFigmaUrl) {
+    sessionStorage.setItem('figmaUrl', selectedFigmaUrl);
+  }
+  
+  {% if session.get('user_id') %}
+    // Clear backend session BEFORE redirecting
+    try {
+      await fetch('/new_chat', { method: 'POST' });
+    } catch (e) {
+      console.log('Session clear failed:', e);
+    }
+    
+    window.location.href = "{{ url_for('main_page') }}";
+  {% else %}
+    window.location.href = "{{ url_for('login') }}";
+  {% endif %}
+}
+
+// Attach menu toggle
+if (landingAttachBtn && landingAttachMenu) {
+  landingAttachBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    landingAttachMenu.classList.toggle('active');
+  });
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (landingAttachMenu && !landingAttachMenu.contains(e.target) && e.target !== landingAttachBtn) {
+      landingAttachMenu.classList.remove('active');
+    }
+  });
+}
+
+// Update overall attachments visibility
+function updateAttachmentsVisibility() {
+  const hasImages = selectedLandingImages.length > 0;
+  const hasFigma = selectedFigmaUrl !== '';
+  
+  if (hasImages || hasFigma) {
+    landingAttachmentsPreview.style.display = 'flex';
+  } else {
+    landingAttachmentsPreview.style.display = 'none';
+  }
+}
+
+// Update image preview display
+function updateImagePreview() {
+  if (selectedLandingImages.length === 0) {
+    landingImagePreview.style.display = 'none';
+    landingImagePreview.innerHTML = '';
+  } else {
+    landingImagePreview.style.display = 'flex';
+    landingImagePreview.innerHTML = '';
+    
+    selectedLandingImages.forEach((file, index) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'image-preview-item';
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="Preview ${index + 1}">
+          <button class="image-preview-remove" onclick="removeImage(${index})" title="Remove image">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        landingImagePreview.appendChild(previewItem);
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  }
+  
+  // Update attach button badge
+  updateAttachBadge();
+  updateAttachmentsVisibility();
+}
+
+// Update Figma preview
+function updateFigmaPreview() {
+  if (!selectedFigmaUrl) {
+    landingFigmaPreview.style.display = 'none';
+    landingFigmaPreview.innerHTML = '';
+  } else {
+    landingFigmaPreview.style.display = 'block';
+    landingFigmaPreview.innerHTML = `
+      <div class="figma-link-preview">
+        <span class="figma-link-text">${selectedFigmaUrl}</span>
+        <button class="figma-link-remove" onclick="removeFigmaLink()" title="Remove Figma link">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+  }
+  
+  updateAttachBadge();
+  updateAttachmentsVisibility();
+}
+
+// Remove image function (must be global)
+window.removeImage = function(index) {
+  selectedLandingImages.splice(index, 1);
+  updateImagePreview();
+};
+
+// Remove Figma link function (must be global)
+window.removeFigmaLink = function() {
+  selectedFigmaUrl = '';
+  updateFigmaPreview();
+};
+
+// Update attach button badge - FIXED VERSION
+function updateAttachBadge() {
+  const totalAttachments = selectedLandingImages.length + (selectedFigmaUrl ? 1 : 0);
+  
+  if (totalAttachments > 0) {
+    landingAttachBtn.classList.add('has-attachments');
+    landingAttachBtn.setAttribute('data-count', totalAttachments);
+  } else {
+    landingAttachBtn.classList.remove('has-attachments');
+    landingAttachBtn.removeAttribute('data-count');
+  }
+}
+
+// Image upload handler
+if (landingImageInput) {
+  landingImageInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Check if adding these files would exceed limit
+    if (selectedLandingImages.length + files.length > 3) {
+      alert("Maximum 3 images allowed!");
+      landingImageInput.value = "";
+      return;
+    }
+    
+    // Add to selected images array
+    selectedLandingImages.push(...files.slice(0, 3 - selectedLandingImages.length));
+    
+    // Update preview
+    updateImagePreview();
+    
+    // Close menu
+    landingAttachMenu.classList.remove('active');
+    
+    // Reset file input for next selection
+    landingImageInput.value = "";
+  });
+}
+
+// Figma URL handler - UPDATED VERSION
+if (landingFigmaSubmitBtn) {
+  landingFigmaSubmitBtn.addEventListener('click', () => {
+    const url = landingFigmaInput.value.trim();
+    if (!url) {
+      alert("Please enter a Figma URL");
+      return;
+    }
+    
+    if (!url.includes("figma.com")) {
+      alert("Please enter a valid Figma URL");
+      return;
+    }
+    
+    // Store the Figma URL
+    selectedFigmaUrl = url;
+    
+    // Update preview
+    updateFigmaPreview();
+    
+    // Clear input
+    landingFigmaInput.value = "";
+    
+    // Close menu
+    landingAttachMenu.classList.remove('active');
+  });
+}
+
+// Voice input handler for landing page
+if (landingVoiceBtn) {
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const landingRecognition = new SpeechRecognition();
+    landingRecognition.continuous = false;
+    landingRecognition.interimResults = false;
+    landingRecognition.lang = 'en-US';
+    let isLandingRecording = false;
+
+    landingVoiceBtn.addEventListener('click', () => {
+      if (isLandingRecording) {
+        landingRecognition.stop();
+        isLandingRecording = false;
+        landingVoiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        landingVoiceBtn.style.background = 'transparent';
+      } else {
+        try {
+          landingRecognition.start();
+          isLandingRecording = true;
+          landingVoiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+          landingVoiceBtn.style.background = '#ef4444';
+        } catch (err) {
+          console.error("Speech recognition error:", err);
+          alert("Microphone access denied or already in use");
+        }
+      }
+    });
+
+    landingRecognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      const currentText = landingPromptInput.value.trim();
+      landingPromptInput.value = currentText ? `${currentText} ${transcript}` : transcript;
+      
+      landingPromptInput.style.height = 'auto';
+      landingPromptInput.style.height = (landingPromptInput.scrollHeight) + 'px';
+      
+      isLandingRecording = false;
+      landingVoiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+      landingVoiceBtn.style.background = 'transparent';
+    };
+
+    landingRecognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      isLandingRecording = false;
+      landingVoiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+      landingVoiceBtn.style.background = 'transparent';
+      
+      if (event.error === 'not-allowed') {
+        alert("Microphone access denied. Please enable microphone permissions.");
+      } else if (event.error === 'no-speech') {
+        alert("No speech detected. Please try again.");
+      }
+    };
+
+    landingRecognition.onend = () => {
+      isLandingRecording = false;
+      landingVoiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+      landingVoiceBtn.style.background = 'transparent';
+    };
+  } else {
+    landingVoiceBtn.disabled = true;
+    landingVoiceBtn.title = "Voice input not supported in this browser";
+    landingVoiceBtn.style.opacity = '0.5';
+  }
+}
+</script>
+  <script src="{{ url_for('static', filename='projects.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const landingAttachBtn = document.getElementById("landing-attach-btn");
+  const landingVoiceBtn = document.getElementById("landing-voice-btn");
+  const mainAttachBtn   = document.getElementById("attach-btn");
+  const mainVoiceBtn    = document.getElementById("voice-btn");
+
+  console.log("landing attach:", landingAttachBtn);
+  console.log("main attach:", mainAttachBtn);
+  console.log("landing voice:", landingVoiceBtn);
+  console.log("main voice:", mainVoiceBtn);
+
+  if (landingAttachBtn && mainAttachBtn) {
+    landingAttachBtn.addEventListener("click", () => {
+      mainAttachBtn.click();   // triggers original attach
+    });
+  }
+
+  if (landingVoiceBtn && mainVoiceBtn) {
+    landingVoiceBtn.addEventListener("click", () => {
+      mainVoiceBtn.click();    // triggers original voice
+    });
+  }
+
+});
+</script>
+
+
+</body>
+</html>

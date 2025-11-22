@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bad Coder</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <!-- Main App -->
+  <div id="main-app" class="app-shell">
+    
+    <!-- Projects Sidebar (slides from left) -->
+    <aside id="projects-sidebar" class="projects-sidebar">
+      <div class="projects-sidebar-header">
+        <h2></i> Projects</h2>
+        <button class="close-sidebar-btn" onclick="closeProjectsSidebar()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="projects-list" id="projects-list-sidebar">
+        <div class="loading-projects">
+          <i class="fas fa-spinner fa-spin"></i> Loading...
+        </div>
+      </div>
+    </aside>
+
+    <!-- Left Column (Chat) -->
+    <aside class="left-col">
+      <header class="left-header">
+        <div class="brand">
+          <button onclick="openProjectsSidebar()" class="header-burger-btn" title="Projects History">
+            <i class='fa fa-history'></i>
+          </button>
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Bad Coder Logo" style="width: 48px; margin-right: 8px;">
+          <h1>Bad Coder</h1>
+        </div>
+        <div class="header-controls">
+          <button id="new-chat" class="btn small"><i class="far fa-edit"></i></button>
+          <div class="credits">Credits: <span id="credits">{{ credits }}</span></div>
+        </div>
+      </header>
+
+      <div class="left-content">
+        {% if history %}
+          {% set item = history[-1] %}
+          <div class="history-item" tabindex="0">
+            <div class="history-meta">You: <span class="prompt-text">{{ item.prompt }}</span></div>
+            <div class="history-body">
+              {% if item.description %}
+                <div class="md-block" data-md='{{ item.description | tojson | safe }}'></div>
+              {% else %}
+                <div class="md-block" data-md='{{ "AI generated content. Preview the code on the right." | tojson | safe }}'></div>
+              {% endif %}
+            </div>
+            <pre class="hidden-code" style="display:none;">{{ item.generated_code | e }}</pre>
+          </div>
+        {% else %}
+          <div class="history-item">
+            <div class="history-body">
+              <div class="md-block" data-md='{{ "Welcome to Bad Coder – describe the website you want. Example: **create a modern tech startup landing page with hero, features, and pricing sections**" | tojson | safe }}'></div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <form id="composer" class="composer" onsubmit="return false;">
+        <div class="main-prompt-container">
+          <textarea id="prompt" class="prompt-input" placeholder="Describe the app you want..." rows="2"></textarea>
+          <div class="main-prompt-actions">
+            <button type="button" id="attach-btn" class="main-attach-btn" title="Attach file">
+              <i class="fas fa-plus"></i>
+            </button>
+
+            <input type="file" id="file-input" style="display: none;" />
+
+            <div class="attach-menu" id="attach-menu" style="display:none;">
+              <label class="upload-images-btn">
+                <i class="fas fa-image"></i> Upload Images (max 3)
+                <input type="file" id="image-input" accept="image/*" multiple hidden>
+              </label>
+              
+              <div class="attach-menu-divider"></div>
+              
+              <input type="text" id="figma-url-input" placeholder="Paste Figma URL here" class="figma-url-box"/>
+              <button id="figma-submit-btn" class="figma-submit">
+                <i class="fas fa-plus-circle"></i> Add Figma URL
+              </button>
+            </div>
+
+            <div class="main-submit-group">
+              <button type="button" id="voice-btn" class="main-voice-btn" title="Voice input">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button type="submit" id="send" class="main-submit-btn" title="Submit">
+                <i class="fas fa-arrow-up"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </aside>
+
+    <!-- Right Column (Preview/Code) -->
+    <main class="right-col">
+      <div class="preview-top">
+        <div class="left-controls">
+          <div class="nav-buttons">
+            <button id="nav-back-btn" class="nav-btn" title="Go back" disabled>
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="nav-forward-btn" class="nav-btn" title="Go forward" disabled>
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <button id="nav-reload-btn" class="nav-btn" title="Reload">
+              <i class="fas fa-redo-alt"></i>
+            </button>
+          </div>
+          <div class="page-title-container">
+            <span class="dot"></span>
+            <input 
+              type="text" 
+              id="page-title-input" 
+              class="page-title-editable" 
+              value="Untitled"
+              placeholder="Untitled"
+            >
+          </div>
+        </div>
+        <div class="preview-controls">
+          <button id="preview-btn" class="preview-toggle active">
+            <i class="fas fa-eye"></i>
+            <span>Preview</span>
+          </button>
+          <button id="code-btn" class="preview-toggle">
+            <i class="fas fa-code"></i>
+            <span>Code</span>
+          </button>
+          <button id="responsive-btn" class="preview-toggle" title="Change device view">
+              <i class="fas fa-desktop"></i>
+           </button>
+          <button id="open-new-tab-btn" class="preview-toggle-new" title="Open in new tab">
+            <i class="fas fa-external-link-alt"></i>
+          </button>
+          <button id="github-btn" class="preview-toggle" title="Push to GitHub">
+            <i class="fab fa-github"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Area -->
+      <div id="preview-container" class="preview-area">
+        <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals" class="preview-frame"></iframe>
+      </div>
+
+      <!-- Code Area (hidden by default) -->
+      <div id="code-container" class="code-container" style="display: none;">
+        <!-- File Explorer Column -->
+        <aside class="file-col-inline">
+          <div class="file-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search files" class="file-search-input">
+          </div>
+          <div class="file-tree-container">
+            <ul id="file-tree" class="file-tree">
+              <!-- Files will be dynamically inserted here -->
+            </ul>
+          </div>
+        </aside>
+
+        <!-- Code Editor Area -->
+        <div class="code-editor-area">
+          <div class="code-editor-header">
+            <div class="editor-tabs">
+              <div class="editor-tab active" id="current-file-tab">
+                <span id="current-file-name">Select a file</span>
+              </div>
+            </div>
+            <div class="editor-actions">
+              <button id="copy-btn" class="editor-action-btn" title="Copy code">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button id="download-btn" class="editor-action-btn" title="Download all files">
+                <i class="fas fa-download"></i>
+              </button>
+              <button id="refresh-files-btn" class="editor-action-btn" title="Refresh files">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <pre id="code-view" class="code-view"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='projects.js') }}"></script>
+  
+  <!-- Load stacked cards animation when preview is blank -->
+  <script>
+    function loadPreviewLoadingAnimation() {
+      const previewFrame = document.getElementById('preview');
+      if (previewFrame) {
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        doc.open();
+        doc.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1A1D1F;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+
+        .card {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background-color: #1A1D1F;
+            border: 0.5px solid rgba(255,255,255,0.5);
+            border-radius: 50px;
+            left: 50%;
+            top: 50%;
+            transform-origin: center center;
+        }
+
+        .card-bottom {
+            animation: cardAnimationBottom 6s infinite;
+            z-index: 1;
+        }
+
+        .card-middle {
+            animation: cardAnimation 6s infinite;
+            z-index: 2;
+        }
+
+        .card-top {
+            animation: cardAnimationTop 6s infinite;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .card-top img {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+        }
+
+        @keyframes cardAnimation {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+                height: 200px;
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+                height: 200px;
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+                height: 200px;
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+
+        @keyframes cardAnimationTop {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+                height: 200px;
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(-50px) translateX(50px) skewX(20deg);
+                height: 200px;
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(-150px) translateX(50px) skewX(20deg);
+                height: 200px;
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(-50px) translateX(50px) skewX(20deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+
+        @keyframes cardAnimationBottom {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(20deg);
+                height: 200px;
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(50px) translateX(-50px) skewX(20deg);
+                height: 200px;
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(150px) translateX(-50px) skewX(20deg);
+                height: 200px;
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(50px) translateX(-50px) skewX(20deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card card-bottom"></div>
+        <div class="card card-middle"></div>
+        <div class="card card-top">
+          <img src="static/Frame 10.svg">
+          </div>
+    </div>
+</body>
+</html>`);
+        doc.close();
+      }
+    }
+    
+    // Load animation on page load if preview is empty
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        const previewFrame = document.getElementById('preview');
+        try {
+          const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+          if (!doc.body || doc.body.children.length === 0) {
+            loadPreviewLoadingAnimation();
+          }
+        } catch (e) {
+          // If iframe is empty, load animation
+          loadPreviewLoadingAnimation();
+        }
+      }, 500);
+    });
+  </script>
+  
+  <!-- Check for initial prompt from landing page -->
+  <script>
+    window.addEventListener('load', () => {
+      const initialPrompt = sessionStorage.getItem('initialPrompt');
+      if (initialPrompt) {
+        sessionStorage.removeItem('initialPrompt');
+        const promptInput = document.getElementById('prompt');
+        if (promptInput) {
+          promptInput.value = initialPrompt;
+          setTimeout(() => {
+            if (typeof generatePrompt === 'function') {
+              generatePrompt();
+            }
+          }, 100);
+        }
+      }
+    });
+    
+    // Load project if one was selected from history
+    window.addEventListener('DOMContentLoaded', () => {
+      const loadedProject = sessionStorage.getItem('loadedProject');
+      
+      if (loadedProject) {
+        try {
+          const project = JSON.parse(loadedProject);
+          sessionStorage.removeItem('loadedProject');
+          
+          restoreProjectFiles(project, project.project_id);
+          restoreChatHistory(project.chat_history);
+          
+          setTimeout(() => {
+            if (typeof loadPreview === 'function') loadPreview('index.html');
+            if (typeof fetchAndRenderFiles === 'function') fetchAndRenderFiles();
+          }, 500);
+          
+        } catch (e) {
+          console.error('Failed to load project:', e);
+        }
+      }
+    });
+    
+    async function restoreProjectFiles(project, projectId) {
+      try {
+        const response = await fetch('/api/restore-files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            files: project.files,
+            project_id: projectId 
+          })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to restore files');
+        }
+      } catch (err) {
+        console.error('Error restoring files:', err);
+      }
+
+      // Restore project name
+      if (project.name) {
+        localStorage.setItem('currentProjectName', project.name);
+        const pageTitleInput = document.getElementById('page-title-input');
+        if (pageTitleInput) {
+          pageTitleInput.value = project.name;
+          window.projectTitle = project.name;
+        }
+      }
+    }
+    
+    function restoreChatHistory(chatHistory) {
+      const chatBox = document.querySelector('.left-content');
+      if (!chatBox || !chatHistory || chatHistory.length === 0) return;
+      
+      chatBox.innerHTML = '';
+
+      // Track the latest code
+      let latestCode = '';
+      
+      chatHistory.forEach(chat => {
+        const userBubble = document.createElement('div');
+        userBubble.className = 'history-item';
+        userBubble.innerHTML = `
+          <div class="history-meta">🧠 You: <span class="prompt-text">${escapeHtml(chat.prompt)}</span></div>
+          <div class="history-body"><div class="md-block">${escapeHtml(chat.response || 'Generated')}</div></div>
+          <pre class="hidden-code" style="display:none;">${escapeHtml(chat.generated_code || '')}</pre>
+        `;
+        chatBox.appendChild(userBubble);
+        
+        // Update latestCode if this chat has generated_code
+        if (chat.generated_code) {
+          latestCode = chat.generated_code;
+        }
+      });
+
+      // NOW set window.lastGeneratedCode ONCE with the final value
+      if (latestCode) {
+        window.lastGeneratedCode = latestCode;
+        console.log('✅ Restored lastGeneratedCode:', latestCode.substring(0, 100) + '...');
+      }
+      
+      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      if (typeof wireHistoryLoaders === 'function') {
+        wireHistoryLoaders();
+      }
+      if (typeof renderMarkdownBlocks === 'function') {
+        renderMarkdownBlocks();
+      }
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize lastGeneratedCode from server-rendered history on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if there's a hidden-code element from server-rendered history
+      const hiddenCodeEl = document.querySelector('.history-item .hidden-code');
+      if (hiddenCodeEl && hiddenCodeEl.textContent.trim()) {
+        window.lastGeneratedCode = hiddenCodeEl.textContent.trim();
+        console.log('✅ Initialized lastGeneratedCode from page:', window.lastGeneratedCode.substring(0, 100) + '...');
+      } else {
+        console.log('ℹ️ No existing code found on page');
+      }
+    });
+
+  </script>
+  
+  <script>
+  // Auto-load preview on page load if files exist
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const response = await fetch('/api/files');
+      const data = await response.json();
+      
+      if (data.files && data.files.length > 0) {
+        console.log('✅ Files found, loading preview...');
+        
+        // Find index.html
+        const indexFile = data.files.find(f => f.name === 'index.html' || f.path === 'index.html');
+        if (indexFile) {
+          // Load preview immediately
+          const previewFrame = document.getElementById('preview');
+          if (previewFrame) {
+            previewFrame.src = '/preview/index.html?t=' + new Date().getTime();
+            console.log('✅ Preview loaded');
+          }
+          
+          // Also update code view with index.html content
+          try {
+            const fileRes = await fetch(`/api/file?filename=index.html`);
+            const fileData = await fileRes.json();
+            if (fileData.content) {
+              const codeView = document.getElementById('code-view');
+              if (codeView) {
+                codeView.textContent = fileData.content;
+                window.lastGeneratedCode = fileData.content;
+                console.log('✅ Code view updated');
+              }
+            }
+          } catch (err) {
+            console.log('ℹ️ Could not load code content');
+          }
+          
+          // Refresh file tree
+          if (typeof fetchAndRenderFiles === 'function') {
+            fetchAndRenderFiles();
+          }
+        }
+      } else {
+        // No files, show loading animation
+        console.log('ℹ️ No files found, showing loading animation');
+        loadPreviewLoadingAnimation();
+      }
+    } catch (error) {
+      console.error('Error loading preview:', error);
+      loadPreviewLoadingAnimation();
+    }
+  });
+</script>
+  
+  <div id="github-modal" class="github-modal" style="display: none;">
+    <div class="github-modal-content">
+      <div class="github-modal-header">
+        <h2><i class="fab fa-github"></i> Push to GitHub</h2>
+        <button class="close-github-modal" onclick="closeGithubModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="github-modal-body">
+        <div id="github-not-linked" class="github-section">
+          <p>Link your GitHub account to push your generated files to a repository.</p>
+          <button id="github-auth-btn" class="btn-github-auth">
+            <i class="fab fa-github"></i> Link GitHub Account
+          </button>
+        </div>
+        
+        <div id="github-linked" class="github-section" style="display: none;">
+          <p>Logged in as: <strong id="github-username-display"></strong></p>
+          
+          <div class="form-group">
+            <label>Repository Name:</label>
+            <input type="text" id="repo-name-input" placeholder="vibe-labs-project" value="vibe-labs-project">
+          </div>
+          
+          <div class="form-group">
+            <label>Commit Message:</label>
+            <input type="text" id="commit-message-input" placeholder="Add generated website files" value="Add generated website files">
+          </div>
+          
+          <button id="push-btn" class="btn-push-github">
+            <i class="fas fa-arrow-up"></i> Push Files to GitHub
+          </button>
+          
+          <div id="github-result" style="display: none;" class="github-result">
+            <p id="github-message"></p>
+            <a id="github-repo-link" href="#" target="_blank" class="github-link">
+              <i class="fab fa-github"></i> View Repository
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="{{ url_for('static', filename='github.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stacked Cards Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: red;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .card {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-color: red;
+            border: 1px solid white;
+            border-radius: 20px;
+            left: 50%;
+            top: 50%;
+            transform-origin: center center;
+        }
+
+        .card-bottom {
+            animation: cardAnimationBottom 6s infinite;
+            z-index: 1;
+        }
+
+        .card-middle {
+            animation: cardAnimation 6s infinite;
+            z-index: 2;
+        }
+
+        .card-top {
+            animation: cardAnimationTop 6s infinite;
+            z-index: 3;
+        }
+
+        @keyframes cardAnimation {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+
+        @keyframes cardAnimationTop {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(-100px) skewX(30deg);
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+
+        @keyframes cardAnimationBottom {
+            0% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            16.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(100px) skewX(30deg);
+            }
+            66.67% {
+                transform: translate(-50%, -50%) translateY(0) skewX(30deg);
+            }
+            83.33% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) translateY(0) skewX(0deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card card-bottom"></div>
+        <div class="card card-middle"></div>
+        <div class="card card-top"></div>
+    </div>
+</body>
+</html>
