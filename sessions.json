@@ -2892,5 +2892,25 @@
             "scripts.js"
         ],
         "was_modification": true
+    },
+    {
+        "prompt": "make a dating website",
+        "generated_code": "<!DOCTYPE html>\n\n<html lang=\"en\">\n<head><link href=\"styles.css\" rel=\"stylesheet\"/>\n<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\"/>\n<link href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\" rel=\"stylesheet\"/>\n<link href=\"https://unpkg.com/aos@2.3.1/dist/aos.css\" rel=\"stylesheet\"/>\n<link href=\"https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css\" rel=\"stylesheet\"/>\n<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>\n<script src=\"https://unpkg.com/aos@2.3.1/dist/aos.js\"></script>\n<script src=\"https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js\"></script>\n<meta charset=\"utf-8\"/>\n<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n<title>SparkMatch - Find Your Perfect Match</title>\n<link crossorigin=\"anonymous\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\" integrity=\"sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==\" referrerpolicy=\"no-referrer\" rel=\"stylesheet\"/>\n</head>\n<body>\n<!-- Navigation -->\n<nav>\n<ul>\n<li><a href=\"index.html\">Home</a></li>\n<li><a href=\"about.html\">About</a></li>\n<li><a href=\"services.html\">How it Works</a></li>\n<li><a href=\"portfolio.html\">Success Stories</a></li>\n<li><a href=\"contact.html\">Contact</a></li>\n<li><a href=\"pricing.html\">Pricing</a></li>\n</ul>\n</nav>\n<!-- Hero Section -->\n<section id=\"hero\">\n<h1>Find Your Spark with SparkMatch</h1>\n<p>Connecting hearts and igniting sparks. Start your love story today!</p>\n<a class=\"cta-button\" href=\"register.html\">Join Now - It's Free!</a>\n</section>\n<!-- Features Section -->\n<section id=\"features\">\n<h2>Why Choose SparkMatch?</h2>\n<div class=\"feature\">\n<i class=\"fas fa-heart\"></i>\n<h3>Advanced Matching Algorithm</h3>\n<p>Our intelligent algorithm ensures you're matched with people who truly align with your interests and values.</p>\n</div>\n<div class=\"feature\">\n<i class=\"fas fa-shield-alt\"></i>\n<h3>Safe &amp; Secure</h3>\n<p>Your safety is our priority. We use advanced security measures to protect your data and privacy.</p>\n</div>\n<div class=\"feature\">\n<i class=\"fas fa-comments\"></i>\n<h3>24/7 Support</h3>\n<p>Our dedicated support team is here to help you with any questions or concerns you may have.</p>\n</div>\n</section>\n<!-- Testimonials Section -->\n<section id=\"testimonials\">\n<h2>What Our Users Say</h2>\n<div class=\"testimonial\">\n<p>\"I met the love of my life on SparkMatch! I never thought I'd find someone so perfect for me online.\"</p>\n<p class=\"author\">- Jane Doe</p>\n</div>\n<div class=\"testimonial\">\n<p>\"SparkMatch is the best dating site I've ever used. The interface is clean and easy to use, and I've met some amazing people.\"</p>\n<p class=\"author\">- John Smith</p>\n</div>\n</section>\n<!-- Contact Section -->\n<section id=\"contact\">\n<h2>Contact Us</h2>\n<p>Have questions? Reach out to our friendly team!</p>\n<form>\n<input placeholder=\"Your Name\" type=\"text\"/>\n<input placeholder=\"Your Email\" type=\"email\"/>\n<textarea placeholder=\"Your Message\" rows=\"5\"></textarea>\n<button type=\"submit\">Send Message</button>\n</form>\n</section>\n<!-- Footer -->\n<footer>\n<p>\u00a9 2024 SparkMatch. All rights reserved.</p>\n</footer>\n\n<!-- Example Pages -->\n<a href=\"about.html\" style=\"display:none;\">About Us</a>\n<a href=\"services.html\" style=\"display:none;\">Our Services</a>\n<a href=\"portfolio.html\" style=\"display:none;\">Portfolio</a>\n<a href=\"contact.html\" style=\"display:none;\">Contact Us</a>\n<a href=\"pricing.html\" style=\"display:none;\">Pricing</a>\n<a href=\"register.html\" style=\"display:none;\">Register</a>\n<script src=\"scripts.js\"></script></body>\n</html>",
+        "description": "This is a complete landing page for a dating website called \"SparkMatch,\" designed to be modern and engaging.\n\nHere are a few suggestions to enhance it further:\n\n1.  **Profile Pages:** Add dedicated profile pages with more in-depth user information and photos.  This would be a critical element for a dating site.\n2.  **Interactive Map:** Integrate an interactive map feature to visualize potential matches in the user's vicinity. This can make location-based matching more visually appealing.",
+        "timestamp": "2025-11-23 00:52:33.793807",
+        "remaining_credits": 50,
+        "filename": "index.html",
+        "created_files": [
+            "index.html",
+            "about.html",
+            "services.html",
+            "portfolio.html",
+            "contact.html",
+            "pricing.html",
+            "register.html",
+            "styles.css",
+            "scripts.js"
+        ],
+        "was_modification": false
     }
 ]
