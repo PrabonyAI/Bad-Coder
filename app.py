@@ -47,9 +47,9 @@ migrate = Migrate(app, db)
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
-    client_id=os.getenv.GOOGLE_CLIENT_ID,
-    client_secret=os.getenv.GOOGLE_CLIENT_SECRET,
-    server_metadata_url=os.getenv.GOOGLE_DISCOVERY_URL,
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url=os.getenv("GOOGLE_DISCOVERY_URL"),
     client_kwargs={
         'scope': 'openid email profile'
     }
@@ -583,8 +583,8 @@ def logout():
 
 github = oauth.register(
     name='github',
-    client_id=os.getenv.GITHUB_CLIENT_ID,
-    client_secret=os.getenv.GITHUB_CLIENT_SECRET,
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
     access_token_url='https://github.com/login/oauth/access_token',
     access_token_params=None,
     authorize_url='https://github.com/login/oauth/authorize',
