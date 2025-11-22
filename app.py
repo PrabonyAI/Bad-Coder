@@ -34,30 +34,32 @@ _extracted_css = None
 _extracted_js = None
 
 app = Flask(__name__)
-app.secret_key = config.SECRET_KEY
+import os
+app.secret_key = os.getenv("SECRET_KEY")
 
-# Database Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQLALCHEMY_TRACK_MODIFICATIONS
+
+# Database os.getenvuration
+app.os.getenv['SQLALCHEMY_DATABASE_URI'] = os.getenv.SQLALCHEMY_DATABASE_URI
+app.os.getenv['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv.SQLALCHEMY_TRACK_MODIFICATIONS
 
 # Initialize database
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# OAuth Configuration
+# OAuth os.getenvuration
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
-    client_id=config.GOOGLE_CLIENT_ID,
-    client_secret=config.GOOGLE_CLIENT_SECRET,
-    server_metadata_url=config.GOOGLE_DISCOVERY_URL,
+    client_id=os.getenv.GOOGLE_CLIENT_ID,
+    client_secret=os.getenv.GOOGLE_CLIENT_SECRET,
+    server_metadata_url=os.getenv.GOOGLE_DISCOVERY_URL,
     client_kwargs={
         'scope': 'openid email profile'
     }
 )
 
-# --- Configuration ---
-genai.configure(api_key=config.GEMINI_API_KEY)
+# --- os.getenvuration ---
+genai.os.getenvure(api_key=os.getenv.GEMINI_API_KEY)
 model = genai.GenerativeModel("models/gemini-2.0-flash")
 
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +74,7 @@ IMAGE_CATEGORIES = {
     "fitness": "gym,fitness,workout",
     "beauty": "cosmetics,makeup,beauty"
 }
-# --- End Configuration ---
+# --- End os.getenvuration ---
 
 
 # --- Helper Functions ---
@@ -350,7 +352,7 @@ Generate compelling, realistic content that matches the page purpose!"""
     try:
         response = model.generate_content(
             [content_prompt],
-            generation_config={
+            generation_os.getenv={
                 "temperature": 0.8,
                 "max_output_tokens": 8192,
                 "top_p": 0.95,
@@ -584,8 +586,8 @@ def logout():
 
 github = oauth.register(
     name='github',
-    client_id=config.GITHUB_CLIENT_ID,
-    client_secret=config.GITHUB_CLIENT_SECRET,
+    client_id=os.getenv.GITHUB_CLIENT_ID,
+    client_secret=os.getenv.GITHUB_CLIENT_SECRET,
     access_token_url='https://github.com/login/oauth/access_token',
     access_token_params=None,
     authorize_url='https://github.com/login/oauth/authorize',
@@ -844,7 +846,7 @@ Make this look like a PREMIUM website from 2024!"""
         # ===== CALL AI =====
         response = model.generate_content(
             [full_prompt],
-            generation_config={
+            generation_os.getenv={
                 "temperature": 0.9 if not is_modification else 0.7,
                 "max_output_tokens": 16384,
                 "top_p": 0.95,
