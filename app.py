@@ -816,6 +816,11 @@ def github_status():
 
 
 # --- Core App Routes ---
+@app.route("/ping")
+def ping():
+    """Ultra-minimal ping endpoint for uptime bots - returns only 1 byte"""
+    return "1", 200, {'Content-Type': 'text/plain', 'Content-Length': '1'}
+
 @app.route("/main")
 @login_required
 def main_page():
