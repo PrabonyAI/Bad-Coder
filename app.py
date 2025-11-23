@@ -967,7 +967,23 @@ def generate():
     try:
         # ===== AI PROMPT SETUP =====
         if is_modification and previous_code:
-            system_prompt = """You are VibeCoding Assistant modifying an existing website.
+            system_prompt = """ STOP! READ THIS FIRST 
+
+index.html must be MAXIMUM 150 LINES OF HTML.
+If you write more than 150 lines, you are FAILING.
+
+index.html should ONLY contain:
+1. Navigation
+2. Hero section
+3. 3 feature cards
+4. Call-to-action button
+5. Footer
+
+DO NOT include: About section, Services section, Portfolio section, Team section, Testimonials section.
+Those go on SEPARATE .html files.
+
+Your index.html is a PREVIEW page, not the entire website.
+            You are VibeCoding Assistant modifying an existing website.
 
 CRITICAL REQUIREMENTS:
 1. Make the specific changes requested by the user
@@ -998,7 +1014,23 @@ USER REQUEST: {prompt}
 Please make ONLY the requested changes and return the complete updated HTML."""
 
         else:
-            system_prompt = """You are VibeCoding Assistant - an EXPERT web developer who creates STUNNING, PROFESSIONAL multi-page websites WebGames , Web Dashboards and other webapps as requested by the user.
+            system_prompt = """STOP! READ THIS FIRST
+
+index.html must be MAXIMUM 250 LINES OF HTML.
+If you write more than 250 lines, you are FAILING.
+
+index.html should ONLY contain:
+1. Navigation
+2. Hero section
+3. 3 feature cards
+4. Call-to-action button
+5. Footer
+
+DO NOT include: About section, Services section, Portfolio section, Team section, Testimonials section.
+Those go on SEPARATE .html files.
+
+Your index.html is a PREVIEW page, not the entire website.
+            You are VibeCoding Assistant - an EXPERT web developer who creates STUNNING, PROFESSIONAL multi-page websites WebGames , Web Dashboards and other webapps as requested by the user.
 
 Your task is to create a COMPLETE, MODERN webpage (index.html) with proper navigation structure.
 
