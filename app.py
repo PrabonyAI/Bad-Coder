@@ -145,20 +145,19 @@ IMAGE_CATEGORIES = {
 # --- Helper Functions ---
 def check_and_reset_daily_credits(user):
     """Reset credits to 3 if 24 hours have passed"""
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     
     if not user.last_credit_reset:
-        user.last_credit_reset = datetime.utcnow()
+        user.last_credit_reset = datetime.now(timezone.utc)
         db.session.commit()
         return
     
     # Check if 24 hours have passed
-    time_since_reset = datetime.utcnow() - user.last_credit_reset
+    time_since_reset = datetime.now(timezone.utc) - user.last_credit_reset
     
     if time_since_reset >= timedelta(hours=24):
-        # Reset credits to 3 (not add 3, but set to 3)
         user.credits = 3
-        user.last_credit_reset = datetime.utcnow()
+        user.last_credit_reset = datetime.now(timezone.utc)
         db.session.commit()
         print(f"✅ Credits reset to 3 for user {user.email}")
 
