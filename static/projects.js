@@ -82,6 +82,8 @@ async function loadProjects(location) {
 
 async function loadProject(projectId, location) {
   try {
+    console.log(`🔄 Loading project ${projectId}...`);
+    
     const res = await fetch(`/api/project/${projectId}`);
     const data = await res.json();
     
@@ -95,6 +97,15 @@ async function loadProject(projectId, location) {
     
     // Store project data in sessionStorage
     sessionStorage.setItem('loadedProject', JSON.stringify(data.project));
+    
+    // CRITICAL: Set the project_id in backend session BEFORE redirecting
+    await fetch('/api/set-current-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: projectId })
+    });
+    
+    console.log(`✅ Set current project to ${projectId}`);
     
     // If on landing page, redirect to main
     if (location === 'overlay') {
