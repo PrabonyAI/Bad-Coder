@@ -198,6 +198,192 @@
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script src="{{ url_for('static', filename='projects.js') }}"></script>
+
+  <script>
+    let isProjectLoading = false;
+    let projectLoadingTimeout = null;
+    
+    // Updated loadProject function with race condition prevention
+    async function loadProject(projectId, location) {
+      try {
+        // PREVENT RAPID SWITCHING: If already loading, ignore new requests
+        if (isProjectLoading) {
+          console.log('⏳ Project already loading, ignoring rapid switch request');
+          return;
+        }
+        
+        // Mark as loading
+        isProjectLoading = true;
+        
+        console.log(`🔄 Loading project ${projectId}...`);
+        
+        const res = await fetch(`/api/project/${projectId}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          alert('Failed to load project: ' + data.error);
+          isProjectLoading = false;
+          return;
+        }
+        
+        // Add project_id to the data before storing
+        data.project.project_id = projectId;
+        
+        // Store project data in sessionStorage
+        sessionStorage.setItem('loadedProject', JSON.stringify(data.project));
+        
+        // CRITICAL: Set the project_id in backend session BEFORE redirecting
+        const setProjectRes = await fetch('/api/set-current-project', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_id: projectId })
+        });
+        
+        if (!setProjectRes.ok) {
+          console.error('Failed to set current project on backend');
+          isProjectLoading = false;
+          return;
+        }
+        
+        console.log(`✅ Set current project to ${projectId}`);
+        
+        // ADD DELAY: Wait before redirecting to ensure backend is ready
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // If on landing page, redirect to main
+        if (location === 'overlay') {
+          window.location.href = '/main';
+        } else {
+          // Already on main page, reload with project data
+          window.location.reload();
+        }
+        
+        // Reset loading flag after a timeout (safety measure)
+        projectLoadingTimeout = setTimeout(() => {
+          isProjectLoading = false;
+        }, 5000);
+        
+      } catch (err) {
+        console.error('Failed to load project:', err);
+        alert('Failed to load project');
+        isProjectLoading = false;
+      }
+    }
+    
+    // Optional: Add visual feedback during loading
+    function showProjectLoadingIndicator() {
+      const indicator = document.createElement('div');
+      indicator.id = 'project-loading-indicator';
+      indicator.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: Arial, sans-serif;
+      `;
+      indicator.innerHTML = `
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          text-align: center;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        ">
+          <div style="margin-bottom: 15px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #4a9eff;"></i>
+          </div>
+          <p style="margin: 0; font-size: 16px; font-weight: 500; color: #333;">Loading project...</p>
+          <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">Please wait</p>
+        </div>
+      `;
+      document.body.appendChild(indicator);
+      return indicator;
+    }
+    
+    function hideProjectLoadingIndicator() {
+      const indicator = document.getElementById('project-loading-indicator');
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+    
+    // Updated loadProject with visual feedback
+    async function loadProjectWithFeedback(projectId, location) {
+      try {
+        // PREVENT RAPID SWITCHING
+        if (isProjectLoading) {
+          console.log('⏳ Project already loading, ignoring rapid switch request');
+          return;
+        }
+        
+        isProjectLoading = true;
+        showProjectLoadingIndicator();
+        
+        console.log(`🔄 Loading project ${projectId}...`);
+        
+        const res = await fetch(`/api/project/${projectId}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          hideProjectLoadingIndicator();
+          alert('Failed to load project: ' + data.error);
+          isProjectLoading = false;
+          return;
+        }
+        
+        // Add project_id to the data before storing
+        data.project.project_id = projectId;
+        
+        // Store project data in sessionStorage
+        sessionStorage.setItem('loadedProject', JSON.stringify(data.project));
+        
+        // CRITICAL: Set the project_id in backend session
+        const setProjectRes = await fetch('/api/set-current-project', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_id: projectId })
+        });
+        
+        if (!setProjectRes.ok) {
+          hideProjectLoadingIndicator();
+          console.error('Failed to set current project on backend');
+          isProjectLoading = false;
+          return;
+        }
+        
+        console.log(`✅ Set current project to ${projectId}`);
+        
+        // DELAY: Wait before redirecting
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // If on landing page, redirect to main
+        if (location === 'overlay') {
+          window.location.href = '/main';
+        } else {
+          // Already on main page, reload with project data
+          window.location.reload();
+        }
+        
+        // Reset flag after timeout
+        projectLoadingTimeout = setTimeout(() => {
+          isProjectLoading = false;
+          hideProjectLoadingIndicator();
+        }, 5000);
+        
+      } catch (err) {
+        hideProjectLoadingIndicator();
+        console.error('Failed to load project:', err);
+        alert('Failed to load project');
+        isProjectLoading = false;
+      }
+    }
+  </script>
   
   <!-- FIXED: Improved Preview Loading with Animation Clearing -->
   <script>
