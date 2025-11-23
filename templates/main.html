@@ -386,7 +386,10 @@
   </script>
   
   <!-- FIXED: Improved Preview Loading with Animation Clearing -->
-  <script>
+<script>
+    // Add flag to track if this is the first load
+    let isInitialPreviewLoad = true;
+    
     // Function to clear loading animation from preview iframe
     function clearPreviewLoadingAnimation() {
       const previewFrame = document.getElementById('preview');
@@ -395,14 +398,20 @@
       try {
         const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
         if (doc && doc.body) {
+          // Only check for loading animation container
           const container = doc.querySelector('.container');
-          if (container) {
+          const hasCardElements = container && doc.querySelectorAll('.card').length === 3;
+          
+          // Only clear if we detect the loading animation structure
+          if (hasCardElements) {
             console.log('🧹 Clearing loading animation');
-            doc.body.innerHTML = '';
+            // The actual content will replace the animation naturally
+          } else {
+            console.log('✅ Real content loaded, no clearing needed');
           }
         }
       } catch (e) {
-        // Cross-origin or not accessible yet
+        // Cross-origin or not accessible - ignore
       }
     }
 
@@ -564,7 +573,7 @@
       }
     }
     
-    // Auto-load preview if files exist - FIXED VERSION
+    // Auto-load preview if files exist - PRODUCTION READY VERSION
     async function autoLoadPreviewIfFilesExist() {
       try {
         console.log('🔍 Checking for existing files...');
@@ -575,15 +584,22 @@
           if (filesData.files && filesData.files.length > 0) {
             console.log('✅ Files detected, auto-loading preview...');
             
-            // Load preview and files
             const timestamp = new Date().getTime();
             const previewFrame = document.getElementById('preview');
             
             if (previewFrame) {
-              // Set up onload handler to clear animation
+              // Set up onload handler ONLY for initial load
               previewFrame.onload = function() {
-                console.log('✅ Preview iframe loaded successfully');
-                clearPreviewLoadingAnimation();
+                if (isInitialPreviewLoad) {
+                  console.log('✅ Initial preview loaded');
+                  clearPreviewLoadingAnimation();
+                  isInitialPreviewLoad = false; // Disable for subsequent loads
+                  
+                  // Remove the onload handler after first load
+                  previewFrame.onload = null;
+                } else {
+                  console.log('📄 Navigation detected, preserving content');
+                }
               };
               
               previewFrame.src = `/preview/index.html?t=${timestamp}`;
