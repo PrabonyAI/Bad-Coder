@@ -214,80 +214,80 @@ def save_session_record(record, user_id=None, project_id=None):
             error_msg = "Storage error"
         print(f"❌ Error saving to JSON: {error_msg}")
 
-def save_files_to_database(user_id, project_name):
-    """Save all generated files to database"""
-    try:
-        # Create new project
-        project = Project(user_id=user_id, name=project_name)
-        db.session.add(project)
-        db.session.flush()  # Get project ID
+# def save_files_to_database(user_id, project_name):
+#     """Save all generated files to database"""
+#     try:
+#         # Create new project
+#         project = Project(user_id=user_id, name=project_name)
+#         db.session.add(project)
+#         db.session.flush()  # Get project ID
         
-        # Save all files
-        if os.path.exists(GENERATED_FILES_DIR):
-            for filename in os.listdir(GENERATED_FILES_DIR):
-                filepath = os.path.join(GENERATED_FILES_DIR, filename)
-                if os.path.isfile(filepath):
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        content = f.read()
+#         # Save all files
+#         if os.path.exists(GENERATED_FILES_DIR):
+#             for filename in os.listdir(GENERATED_FILES_DIR):
+#                 filepath = os.path.join(GENERATED_FILES_DIR, filename)
+#                 if os.path.isfile(filepath):
+#                     with open(filepath, 'r', encoding='utf-8') as f:
+#                         content = f.read()
                     
-                    file_ext = filename.split('.')[-1] if '.' in filename else 'txt'
-                    project_file = ProjectFile(
-                        project_id=project.id,
-                        filename=filename,
-                        content=content,
-                        file_type=file_ext
-                    )
-                    db.session.add(project_file)
+#                     file_ext = filename.split('.')[-1] if '.' in filename else 'txt'
+#                     project_file = ProjectFile(
+#                         project_id=project.id,
+#                         filename=filename,
+#                         content=content,
+#                         file_type=file_ext
+#                     )
+#                     db.session.add(project_file)
         
-        db.session.commit()
-        return project.id
-    except Exception as e:
-        error_msg = str(e)
-        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
-            error_msg = "Database storage error"
-        print(f"❌ Error saving files to database: {error_msg}")
-        db.session.rollback()
-        return None
+#         db.session.commit()
+#         return project.id
+#     except Exception as e:
+#         error_msg = str(e)
+#         if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+#             error_msg = "Database storage error"
+#         print(f"❌ Error saving files to database: {error_msg}")
+#         db.session.rollback()
+#         return None
 
-def update_project_files(project_id):
-    """Update files for existing project"""
-    try:
-        project = Project.query.get(project_id)
-        if not project:
-            return False
+# def update_project_files(project_id):
+#     """Update files for existing project"""
+#     try:
+#         project = Project.query.get(project_id)
+#         if not project:
+#             return False
         
-        # Update project timestamp
-        project.updated_at = datetime.datetime.utcnow()
+#         # Update project timestamp
+#         project.updated_at = datetime.datetime.utcnow()
         
-        # Delete old files
-        ProjectFile.query.filter_by(project_id=project_id).delete()
+#         # Delete old files
+#         ProjectFile.query.filter_by(project_id=project_id).delete()
         
-        # Save new files
-        if os.path.exists(GENERATED_FILES_DIR):
-            for filename in os.listdir(GENERATED_FILES_DIR):
-                filepath = os.path.join(GENERATED_FILES_DIR, filename)
-                if os.path.isfile(filepath):
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        content = f.read()
+#         # Save new files
+#         if os.path.exists(GENERATED_FILES_DIR):
+#             for filename in os.listdir(GENERATED_FILES_DIR):
+#                 filepath = os.path.join(GENERATED_FILES_DIR, filename)
+#                 if os.path.isfile(filepath):
+#                     with open(filepath, 'r', encoding='utf-8') as f:
+#                         content = f.read()
                     
-                    file_ext = filename.split('.')[-1] if '.' in filename else 'txt'
-                    project_file = ProjectFile(
-                        project_id=project.id,
-                        filename=filename,
-                        content=content,
-                        file_type=file_ext
-                    )
-                    db.session.add(project_file)
+#                     file_ext = filename.split('.')[-1] if '.' in filename else 'txt'
+#                     project_file = ProjectFile(
+#                         project_id=project.id,
+#                         filename=filename,
+#                         content=content,
+#                         file_type=file_ext
+#                     )
+#                     db.session.add(project_file)
         
-        db.session.commit()
-        return True
-    except Exception as e:
-        error_msg = str(e)
-        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
-            error_msg = "File update error"
-        print(f"❌ Error updating files: {error_msg}")
-        db.session.rollback()
-        return False
+#         db.session.commit()
+#         return True
+#     except Exception as e:
+#         error_msg = str(e)
+#         if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+#             error_msg = "File update error"
+#         print(f"❌ Error updating files: {error_msg}")
+#         db.session.rollback()
+#         return False
 # --- End Session Management ---
 
 
@@ -1293,29 +1293,32 @@ def get_project_details(project_id):
 @app.route("/api/restore-files", methods=["POST"])
 @login_required
 def restore_files():
-    """Restore project files to generated_files folder"""
+    """Set active project when loading from history"""
     try:
         data = request.get_json()
-        files = data.get('files', [])
         project_id = data.get('project_id')
         
-        # Clear existing files
-        clear_generated_files()
+        if not project_id:
+            return jsonify({'error': 'project_id required'}), 400
         
-        # Write files to disk
-        for file_data in files:
-            filepath = os.path.join(GENERATED_FILES_DIR, file_data['filename'])
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(file_data['content'])
+        user_id = session.get('user_id')
         
-        # Store current project ID in session
-        if project_id:
-            session['current_project_id'] = project_id
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
         
-        return jsonify({'success': True})
+        # Set in session - this is all we need!
+        session['current_project_id'] = project_id
+        session['current_project_name'] = project.name
+        
+        print(f"✅ Restored project {project_id} ({project.name})")
+        
+        return jsonify({'success': True, 'project_id': project_id})
+        
     except Exception as e:
-        error_msg = "Failed to restore files"
-        print(f"❌ Error restoring files: {type(e).__name__}")
+        error_msg = "Failed to restore project"
+        print(f"❌ Error restoring project: {type(e).__name__}")
         return jsonify({'error': error_msg}), 500
     
 @app.route("/api/update-project-name", methods=["POST"])
@@ -1445,49 +1448,115 @@ def read_file():
 @app.route("/api/file", methods=["POST"])
 @login_required
 def save_file():
-    if 'file' not in request.files and 'content' not in request.form:
-        return jsonify({'error': 'No file or content provided'}), 400
-    
-    filename = request.form.get('filename')
-    if not filename:
-        return jsonify({'error': 'Filename is required'}), 400
-    
-    if not allowed_file(filename):
-        return jsonify({'error': 'File type not allowed'}), 400
-    
-    filepath = os.path.join(GENERATED_FILES_DIR, secure_filename(filename))
-    
+    """Save or update a file in the database"""
     try:
-        if 'file' in request.files:
-            file = request.files['file']
-            file.save(filepath)
-        else:
-            content = request.form['content']
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(content)
+        user_id = session.get('user_id')
+        project_id = session.get('current_project_id')
         
+        if not project_id:
+            return jsonify({'error': 'No active project'}), 400
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        filename = request.form.get('filename')
+        if not filename:
+            return jsonify({'error': 'Filename is required'}), 400
+        
+        if not allowed_file(filename):
+            return jsonify({'error': 'File type not allowed'}), 400
+        
+        # Check if file already exists
+        existing_file = ProjectFile.query.filter_by(
+            project_id=project_id,
+            filename=filename
+        ).first()
+        
+        if 'file' in request.files:
+            # Binary file upload
+            file = request.files['file']
+            content_binary = file.read()
+            
+            if existing_file:
+                existing_file.content_binary = content_binary
+                existing_file.content = None  # Clear text content
+                existing_file.updated_at = datetime.datetime.utcnow()
+            else:
+                new_file = ProjectFile(
+                    project_id=project_id,
+                    filename=filename,
+                    content_binary=content_binary,
+                    file_type=filename.rsplit('.', 1)[1].lower()
+                )
+                db.session.add(new_file)
+        else:
+            # Text content from form
+            content = request.form.get('content', '')
+            
+            if existing_file:
+                existing_file.content = content
+                existing_file.content_binary = None  # Clear binary content
+                existing_file.updated_at = datetime.datetime.utcnow()
+            else:
+                new_file = ProjectFile(
+                    project_id=project_id,
+                    filename=filename,
+                    content=content,
+                    file_type=filename.rsplit('.', 1)[1].lower()
+                )
+                db.session.add(new_file)
+        
+        db.session.commit()
         return jsonify({'message': 'File saved successfully'})
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        error_msg = "Failed to save file"
+        print(f"❌ Error saving file: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
+
 
 @app.route("/api/file", methods=["DELETE"])
 @login_required
 def delete_file():
-    filename = request.args.get('filename')
-    if not filename:
-        return jsonify({'error': 'Filename is required'}), 400
-    
-    filepath = os.path.join(GENERATED_FILES_DIR, secure_filename(filename))
-    
+    """Delete a file from the database"""
     try:
-        if not os.path.exists(filepath):
+        user_id = session.get('user_id')
+        project_id = session.get('current_project_id')
+        filename = request.args.get('filename')
+        
+        if not project_id:
+            return jsonify({'error': 'No active project'}), 400
+        
+        if not filename:
+            return jsonify({'error': 'Filename is required'}), 400
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        # Find and delete file
+        file = ProjectFile.query.filter_by(
+            project_id=project_id,
+            filename=filename
+        ).first()
+        
+        if not file:
             return jsonify({'error': 'File not found'}), 404
         
-        os.remove(filepath)
+        db.session.delete(file)
+        db.session.commit()
+        
         return jsonify({'message': 'File deleted successfully'})
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
+        db.session.rollback()
+        error_msg = "Failed to delete file"
+        print(f"❌ Error deleting file: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500    
 
 
 
@@ -1542,20 +1611,61 @@ def download_zip():
         return jsonify({'error': error_msg}), 500
     
 @app.route("/api/upload-file", methods=["POST"])
+@login_required
 def upload_images():
-    files = request.files.getlist("images")
-
-    if len(files) == 0:
-        return jsonify({"error": "No files uploaded"}), 400
-    
-    uploaded = []
-    for file in files[:3]:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(GENERATED_FILES_DIR, filename)
-        file.save(filepath)
-        uploaded.append(filename)
-
-    return jsonify({"uploaded": uploaded})
+    """Upload images directly to database"""
+    try:
+        user_id = session.get('user_id')
+        project_id = session.get('current_project_id')
+        
+        if not project_id:
+            return jsonify({"error": "No active project"}), 400
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        files = request.files.getlist("images")
+        
+        if len(files) == 0:
+            return jsonify({"error": "No files uploaded"}), 400
+        
+        uploaded = []
+        for file in files[:3]:  # Limit to 3 images
+            filename = secure_filename(file.filename)
+            content_binary = file.read()
+            
+            # Check if file already exists
+            existing_file = ProjectFile.query.filter_by(
+                project_id=project_id,
+                filename=filename
+            ).first()
+            
+            if existing_file:
+                # Update existing file
+                existing_file.content_binary = content_binary
+                existing_file.updated_at = datetime.datetime.utcnow()
+            else:
+                # Create new file
+                project_file = ProjectFile(
+                    project_id=project_id,
+                    filename=filename,
+                    content_binary=content_binary,
+                    file_type=filename.rsplit('.', 1)[1].lower()
+                )
+                db.session.add(project_file)
+            
+            uploaded.append(filename)
+        
+        db.session.commit()
+        return jsonify({"uploaded": uploaded})
+        
+    except Exception as e:
+        db.session.rollback()
+        error_msg = "Failed to upload images"
+        print(f"❌ Error uploading images: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
 
 @app.route("/api/figma-url", methods=["POST"])
 @login_required
