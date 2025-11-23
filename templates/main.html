@@ -200,8 +200,6 @@
   <script src="{{ url_for('static', filename='projects.js') }}"></script>
 
   <script>
-    let isProjectLoading = false;
-    let projectLoadingTimeout = null;
     
     // Updated loadProject function with race condition prevention
     async function loadProject(projectId, location) {
