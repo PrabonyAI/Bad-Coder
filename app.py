@@ -340,6 +340,42 @@ def extract_navigation_structure(html_content):
             unique_pages.append(page)
     
     return str(soup), unique_pages
+    """Extracts navigation links and their intended page names"""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    pages_to_generate = []
+    
+    nav_elements = soup.find_all(['nav', 'header'])
+    
+    for nav in nav_elements:
+        links = nav.find_all('a', href=True)
+        for link in links:
+            href = link['href']
+            text = link.get_text().strip()
+            
+            if href.startswith(('http://', 'https://', 'mailto:', 'tel:', '#')):
+                continue
+            
+            if href == '#' or href == '':
+                if text.lower() not in ['home', '']:
+                    page_name = re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
+                    page_file = f"{page_name}.html"
+                    link['href'] = page_file
+                    pages_to_generate.append({
+                        'filename': page_file,
+                        'title': text,
+                        'nav_text': text
+                    })
+                else:
+                    link['href'] = 'index.html'
+            elif href.endswith('.html'):
+                if href != 'index.html':
+                    pages_to_generate.append({
+                        'filename': href,
+                        'title': text,
+                        'nav_text': text
+                    })
+    
+    return str(soup), pages_to_generate
 
 
 def generate_page_with_ai(page_info, base_html, original_prompt):
@@ -939,15 +975,14 @@ CRITICAL REQUIREMENTS:
 5. Explain what you changed in Markdown after separator
 6. Maintain all existing functionality, styling, and structure
 
-ADDING NEW PAGES (CRITICAL - FOLLOW EXACTLY):
-When user asks to add/create a new page:
-1. Add <a href="pagename.html">Page Name</a> to the navigation
-2. Use lowercase hyphenated filenames: "about-us.html", "contact.html", "services.html"
-3. Place links inside <nav> or <header> tags
-4. NEVER refuse - ALWAYS add the navigation link
-5. Example: "add a contact page" → Add: <a href="contact.html">Contact</a> to nav
+ADDING NEW PAGES (VERY IMPORTANT):
+- If user asks to "add a new page" or "create a [page-name] page", you MUST:
+  a) Update the navigation in index.html to include a link to the new page (e.g., <a href="web-design.html">Web Design</a>)
+  b) The system will automatically generate the new page file
+- When adding navigation links, use the exact filename format: pagename.html (lowercase, hyphenated)
+- Example: User says "add a web design page" → Update nav: <a href="web-design.html">Web Design</a>
 
-The system will auto-generate the actual page content."""
+DO NOT refuse to make changes. If user asks for new pages, UPDATE THE NAVIGATION."""
 
             full_prompt = f"""{system_prompt}
 
@@ -1078,7 +1113,6 @@ UI STYLING:
 
         # ===== EXTRACT NAVIGATION & CSS/JS =====
         generated_code, pages_to_generate = extract_navigation_structure(generated_code)
-        print(f"✅ Found {len(pages_to_generate)} pages: {[p['filename'] for p in pages_to_generate]}")
         generated_code = extract_all_css_to_file(generated_code)
         generated_code = extract_all_js_to_file(generated_code)
 
