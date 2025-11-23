@@ -502,13 +502,19 @@ def serve_preview_file(filename):
     user_id = session.get('user_id')
     project_id = session.get('current_project_id')
     
+    print(f"🔍 Preview request: {filename} for project_id={project_id}")
+    
     if not project_id:
+        print("❌ No active project in session")
         return "No active project", 404
     
     # Verify user owns this project
     project = Project.query.filter_by(id=project_id, user_id=user_id).first()
     if not project:
+        print(f"❌ Project {project_id} not found or unauthorized")
         return "Unauthorized", 403
+    
+    print(f"✅ Project found: {project.name}")
     
     # Get file from database
     file = ProjectFile.query.filter_by(
@@ -517,7 +523,13 @@ def serve_preview_file(filename):
     ).first()
     
     if not file:
+        print(f"❌ File {filename} not found in project {project_id}")
+        # List available files for debugging
+        available = ProjectFile.query.filter_by(project_id=project_id).all()
+        print(f"📁 Available files: {[f.filename for f in available]}")
         return f"File {filename} not found", 404
+    
+    print(f"✅ Serving file: {filename} (type: {file.file_type})")
     
     # Determine content type
     content_type = 'text/html'
