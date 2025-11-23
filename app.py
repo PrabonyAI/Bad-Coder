@@ -1455,6 +1455,37 @@ def figma_url():
 
     session["figma_url"] = figma_url
     return jsonify({"success": True, "figma_url": figma_url})
+
+@app.route("/api/set-current-project", methods=["POST"])
+@login_required
+def set_current_project():
+    """Set the current active project in session"""
+    try:
+        data = request.get_json()
+        project_id = data.get('project_id')
+        
+        if not project_id:
+            return jsonify({'error': 'project_id required'}), 400
+        
+        user_id = session.get('user_id')
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        # Set in session
+        session['current_project_id'] = project_id
+        session['current_project_name'] = project.name
+        
+        print(f"✅ Set current_project_id to {project_id} ({project.name})")
+        
+        return jsonify({'success': True, 'project_id': project_id, 'name': project.name})
+        
+    except Exception as e:
+        print(f"❌ Error setting project: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # --- End File API ---
 
 
