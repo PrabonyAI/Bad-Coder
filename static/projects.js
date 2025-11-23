@@ -67,12 +67,15 @@ async function loadProjects(location) {
       <div class="project-item" onclick="loadProjectWithFeedback(${project.id}, '${location}')">
         <div class="project-item-name">${escapeHtml(project.name)}</div>
         <div class="project-item-preview">${escapeHtml(project.preview)}</div>
-        <div class="project-item-date">
+        <div class="project-item-date" data-date="${project.updated_at}">
           <i class="fas fa-clock"></i>
           ${formatDate(project.updated_at)}
         </div>
       </div>
     `).join('');
+    
+    // Start auto-refresh
+    startTimestampUpdates();
     
   } catch (err) {
     console.error('Failed to load projects:', err);
@@ -212,14 +215,27 @@ function formatDate(dateString) {
   const now = new Date();
   const diff = now - date;
   
+  const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
   
-  if (minutes < 1) return 'Just now';
+  if (seconds < 60) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
   
   return date.toLocaleDateString();
+}
+
+// Auto-refresh timestamps every minute
+function startTimestampUpdates() {
+  setInterval(() => {
+    document.querySelectorAll('.project-item-date').forEach(el => {
+      const dateStr = el.getAttribute('data-date');
+      if (dateStr) {
+        el.innerHTML = `<i class="fas fa-clock"></i> ${formatDate(dateStr)}`;
+      }
+    });
+  }, 60000);
 }
