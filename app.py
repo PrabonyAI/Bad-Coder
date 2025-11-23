@@ -1033,12 +1033,12 @@ CRITICAL REQUIREMENTS:
 suggestions
 
 MULTI-PAGE STRUCTURE (VERY IMPORTANT):
-- Create a FULL website (index.html) with ALL main content
+- Create SHORT homepage (index.html) - hero + 3-4 preview sections ONLY
+- DO NOT put all content on one page
 - Include navigation with proper page links
 - Common features : Website Name and logo , navigation tabs as required . Icons and beautiful Card styles , and footer and different animation of loading.
 - Be creative - add any other relevant pages based on the prompt.
 - Be flexible to add/remove pages as needed and adjust navigation accordingly
-- Always give full script.js to make every logic and every function work and make every required page dont leave anything for user to build
 - Always make a proper multipage website and never build a webpage.
 - The home page should not be like a single paged website showing all other pages below it but rather it should be a proper Multi Page website
 
