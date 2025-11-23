@@ -122,13 +122,20 @@ def check_and_reset_daily_credits(user):
     """Reset credits to 3 if 24 hours have passed"""
     from datetime import datetime, timedelta, timezone
     
+    # Handle timezone-naive last_credit_reset from old records
     if not user.last_credit_reset:
         user.last_credit_reset = datetime.now(timezone.utc)
         db.session.commit()
         return
     
+    # Convert naive datetime to aware if needed
+    last_reset = user.last_credit_reset
+    if last_reset.tzinfo is None:
+        # Convert naive UTC datetime to aware
+        last_reset = last_reset.replace(tzinfo=timezone.utc)
+    
     # Check if 24 hours have passed
-    time_since_reset = datetime.now(timezone.utc) - user.last_credit_reset
+    time_since_reset = datetime.now(timezone.utc) - last_reset
     
     if time_since_reset >= timedelta(hours=24):
         user.credits = 3
