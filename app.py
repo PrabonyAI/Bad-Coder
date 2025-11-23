@@ -969,13 +969,13 @@ def generate():
         if is_modification and previous_code:
             system_prompt = """ STOP! READ THIS FIRST 
 
-index.html must be MAXIMUM 150 LINES OF HTML.
-If you write more than 150 lines, you are FAILING.
+index.html must be MAXIMUM 350 LINES OF HTML.
+If you write more than 350 lines, you are FAILING.
 
 index.html should ONLY contain:
 1. Navigation
 2. Hero section
-3. 3 feature cards
+3. Required feature cards
 4. Call-to-action button
 5. Footer
 
@@ -1016,13 +1016,13 @@ Please make ONLY the requested changes and return the complete updated HTML."""
         else:
             system_prompt = """STOP! READ THIS FIRST
 
-index.html must be MAXIMUM 250 LINES OF HTML.
-If you write more than 250 lines, you are FAILING.
+index.html must be MAXIMUM 350 LINES OF HTML.
+If you write more than 350 lines, you are FAILING.
 
 index.html should ONLY contain:
 1. Navigation
 2. Hero section
-3. 3 feature cards
+3. Required feature cards
 4. Call-to-action button
 5. Footer
 
