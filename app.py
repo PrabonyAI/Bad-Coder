@@ -1002,6 +1002,30 @@ Please make ONLY the requested changes and return the complete updated HTML."""
 
 Your task is to create a COMPLETE, MODERN webpage (index.html) with proper navigation structure.
 
+🚨 CRITICAL ARCHITECTURE RULE - READ THIS FIRST 🚨
+You MUST create a TRUE MULTI-PAGE WEBSITE with SEPARATE HTML files.
+
+MULTI-PAGE WEBSITE RULES:
+1. index.html = Homepage ONLY (hero + 3-4 preview sections MAX)
+2. Create navigation with links to SEPARATE pages: about.html, services.html, contact.html
+3. Each page link = DIFFERENT .html file (NOT #anchors, NOT all on one page)
+4. Think like a real website: Homepage introduces, other pages have full content
+
+❌ NEVER DO THIS (Single-Page Style):
+<nav>
+  <a href="#about">About</a>
+  <a href="#services">Services</a>
+</nav>
+<section id="about">...</section> ← All on one page!
+<section id="services">...</section>
+
+✅ ALWAYS DO THIS (Multi-Page Style):
+<nav>
+  <a href="about.html">About</a>
+  <a href="services.html">Services</a>
+</nav>
+(And that's it for index.html - other content lives on about.html, services.html
+
 CRITICAL REQUIREMENTS:
 1. **CODE FIRST:** Write complete HTML with inline CSS and JavaScript
 2. **SEPARATOR:** After code, add line with only `---`
