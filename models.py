@@ -9,7 +9,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     name = db.Column(db.String(255))
-    credits = db.Column(db.Integer, default=10)
+    credits = db.Column(db.Integer, default=3)  # Change to 3
+    last_credit_reset = db.Column(db.DateTime, default=datetime.utcnow)  # ADD THIS
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
