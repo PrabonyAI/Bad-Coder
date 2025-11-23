@@ -447,6 +447,15 @@ if (fileSearchInput) {
 
 // --- Landing Page to Main App Transition ---
 function transitionToMainApp() {
+  // ✅ SAFE CHECK: Only transition if elements exist
+  const landingPage = document.getElementById('landing-page');
+  const mainApp = document.getElementById('main-app');
+  
+  if (!landingPage || !mainApp) {
+    console.log('ℹ️ Already on main app, skipping transition');
+    return; // Exit early if elements don't exist
+  }
+  
   landingPage.style.display = 'none';
   mainApp.style.display = 'flex';
   isFirstPrompt = false;
@@ -480,16 +489,32 @@ if (landingSubmitBtn) {
 }
 
 async function handleLandingSubmit() {
+  const landingPromptInput = document.getElementById('landing-prompt');
+  const promptInput = document.getElementById('prompt');
+  const stripbox = document.getElementById('stripbox');
+  
+  // ✅ SAFE CHECK: Only proceed if landing elements exist
+  if (!landingPromptInput) {
+    console.log('ℹ️ Not on landing page');
+    return;
+  }
+  
   const prompt = landingPromptInput.value.trim();
   if (!prompt) return;
-  stripbox.style.display = 'none';
+  
+  if (stripbox) {
+    stripbox.style.display = 'none';
+  }
 
   // Clear previous project code when starting from landing page
   window.lastGeneratedCode = '';
   
   transitionToMainApp();
-  promptInput.value = prompt;
-  await generatePrompt();
+  
+  if (promptInput) {
+    promptInput.value = prompt;
+    await generatePrompt();
+  }
 }
 
 // --- View Toggles ---
@@ -1579,30 +1604,37 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
 // --- Init ---
 window.addEventListener('DOMContentLoaded', async () => {
+  const pageTitleInput = document.getElementById('page-title-input');
   
-
-  // Restore project name from localStorage
-  const savedProjectName = localStorage.getItem('currentProjectName');
-  if (savedProjectName && pageTitleInput) {
-    projectTitle = savedProjectName;
-    pageTitleInput.value = savedProjectName;
+  // Restore project name from localStorage (only on main page)
+  if (pageTitleInput) {
+    const savedProjectName = localStorage.getItem('currentProjectName');
+    if (savedProjectName) {
+      projectTitle = savedProjectName;
+      pageTitleInput.value = savedProjectName;
+    }
   }
 
   renderMarkdownBlocks();
   wireHistoryLoaders();
   
-  const hasHistory = document.querySelector('.history-item .prompt-text');
-  if (hasHistory) {
-    transitionToMainApp();
-    showPreview();
-    fetchAndRenderFiles();
+  // ✅ SAFE CHECK: Only check history if on main page
+  const chatBox = document.querySelector('.left-content');
+  if (chatBox) {
+    const hasHistory = document.querySelector('.history-item .prompt-text');
+    if (hasHistory) {
+      transitionToMainApp(); // This will safely skip if already on main
+      showPreview();
+      fetchAndRenderFiles();
+    }
   }
   
+  const refreshFilesBtn = document.getElementById('refresh-files-btn');
   if (refreshFilesBtn) {
     refreshFilesBtn.addEventListener('click', fetchAndRenderFiles);
   }
 
-// Auto-load preview if files exist
+  // Auto-load preview if files exist
   setTimeout(autoLoadPreviewIfFilesExist, 400);
 });
 
