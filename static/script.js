@@ -1634,8 +1634,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     refreshFilesBtn.addEventListener('click', fetchAndRenderFiles);
   }
 
-  // Auto-load preview if files exist
-  setTimeout(autoLoadPreviewIfFilesExist, 400);
+  
 });
 
 // Separate event listeners that should always work
