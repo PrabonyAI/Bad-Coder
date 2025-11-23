@@ -394,18 +394,71 @@ def generate_page_with_ai(page_info, base_html, original_prompt):
 Context: This is part of a {original_prompt} website.
 Page Type: {page_title}
 
-REQUIREMENTS:
-1. Generate ONLY the <main> or main content section HTML (do NOT include <!DOCTYPE>, <html>, <head>, or full page structure)
-2. Create REAL, detailed content appropriate for a {page_title} page
-3. Use Bootstrap classes for styling (we already have Bootstrap loaded)
-4. Include relevant sections with actual content
-5. Use placeholder images: https://picsum.photos/seed/{page_type}/800/600
-6. Make it look professional and content-rich
-7. Include appropriate icons (Font Awesome already loaded)
-8. Add proper spacing with Bootstrap classes (py-5, my-4, etc.)
-9. Use modern design patterns (cards, grids, hero sections if needed)
+-You are a senior front-end engineer and UI/UX architect who creates visually stunning, modern, production-ready website sections with clean structure and fully functional JavaScript. 
+-You prioritise both exceptional design quality and correct, maintainable code.
+-For generating pages linked to index.html, strictly follow these rules:
 
-Generate compelling, realistic content that matches the page purpose!"""
+CORE STRUCTURE RULES:
+-Generate ONLY the <main> content section HTML.
+-Do NOT include <!DOCTYPE>, <html>, <head>, <body> or full page structure.
+-Create real, highly-detailed, content-rich sections appropriate for a {page_title} page. Content must feel professional, intentional, and realistic.
+-Use semantic, accessible, SEO-friendly HTML with correct hierarchy and clear structure.
+
+DESIGN AND UX REQUIREMENTS:
+-Pages must feel modern, high-end, and comparable to real-world premium websites such as SaaS platforms, tech startups, or professional corporate brands.
+-Use Bootstrap 5 classes extensively and correctly:
+-Grid system (container, row, col-*)
+-Spacing utilities (py-5, my-5, g-4)
+-Components (card, badge, btn, shadow-lg, rounded-4)
+-Apply modern layout patterns:
+-Hero sections with strong typography
+-Feature grids and benefit sections
+-Split layouts (image + content)
+-Testimonials or trust sections
+-Process or timeline blocks
+-CTA panels
+-Include Font Awesome icons where they enhance clarity and visual hierarchy.
+-Use placeholder images only from:
+https://picsum.photos/seed/{page_type}/800/600
+-Images must be meaningful and context-aware.
+-CODE QUALITY AND FUNCTIONALITY
+-All HTML and JavaScript must follow best practices:
+-No broken references
+-No invalid nesting
+-No unused IDs or classes
+-No redundant code
+-JavaScript must be:
+-Fully functional
+-Error-free
+-Modular and readable
+-Using modern ES6+ syntax
+-Free of global variable pollution
+-All interactive components must work:
+--Buttons
+--Tabs
+--Modals
+--Accordions
+--Dropdowns
+--Forms with basic validation
+--Toggles and dynamic UI behavior
+--Use progressive enhancement and graceful degradation.
+
+Follow professional coding standards:
+-Descriptive function names
+-Proper event handling
+-Clear DOM selection
+-Logical separation of concerns
+-VISUAL AND INTERACTION QUALITY
+-Implement smooth microinteractions:
+-Hover effects
+-Active states
+-Subtle transitions
+-Feedback animations
+-Maintain visual rhythm with proper spacing, alignment, and hierarchy.
+
+FINAL OUTPUT GOAL:
+-The page must look and behave like a real-world, professionally engineered product website. It should be visually impressive, technically sound, and ready for production use.
+-Design excellence and functional reliability are equally mandatory. No fake interactivity. No decorative-only code. Every visual element must have purpose and technical integrity."""
 
     try:
         response = model.generate_content(
