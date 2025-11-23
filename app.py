@@ -196,7 +196,10 @@ def save_session_record(record, user_id=None, project_id=None):
         
         db.session.commit()
     except Exception as e:
-        print(f"Error saving to database: {e}")
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "Database configuration error"
+        print(f"❌ Error saving to database: {error_msg}")
         db.session.rollback()
     
     # Also save to JSON file (KEPT for backward compatibility)
@@ -206,7 +209,10 @@ def save_session_record(record, user_id=None, project_id=None):
         with open("sessions.json", "w") as f:
             json.dump(data, f, indent=4)
     except Exception as e:
-        print(f"Error saving to JSON: {e}")
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "Storage error"
+        print(f"❌ Error saving to JSON: {error_msg}")
 
 def save_files_to_database(user_id, project_name):
     """Save all generated files to database"""
@@ -236,7 +242,10 @@ def save_files_to_database(user_id, project_name):
         db.session.commit()
         return project.id
     except Exception as e:
-        print(f"Error saving files to database: {e}")
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "Database storage error"
+        print(f"❌ Error saving files to database: {error_msg}")
         db.session.rollback()
         return None
 
@@ -273,7 +282,10 @@ def update_project_files(project_id):
         db.session.commit()
         return True
     except Exception as e:
-        print(f"Error updating files: {e}")
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "File update error"
+        print(f"❌ Error updating files: {error_msg}")
         db.session.rollback()
         return False
 # --- End Session Management ---
@@ -289,7 +301,7 @@ def clear_generated_files():
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
             except Exception as e:
-                print(f"Error deleting {file_path}: {e}")
+                print(f"❌ Error deleting {file_path}: {type(e).__name__}")
 
 def extract_navigation_structure(html_content):
     """Extracts ALL .html links from the page, not just nav"""
@@ -410,7 +422,10 @@ Generate compelling, realistic content that matches the page purpose!"""
         content_html = re.sub(r'```\s*', '', content_html)
         
     except Exception as e:
-        print(f"AI generation failed for {page_title}: {e}")
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "AI service error"
+        print(f"❌ AI generation failed for {page_title}: {error_msg}")
         content_html = f"""
         <main class="container py-5">
             <div class="text-center mb-5">
@@ -627,10 +642,14 @@ def auth_callback():
             print("No user info received")
             return redirect(url_for('index'))
     except Exception as e:
-        print(f"OAuth error: {e}")
-        import traceback
-        traceback.print_exc()
-        return redirect(url_for('index'))
+        error_msg = str(e)
+        if 'token' in error_msg.lower() or 'key' in error_msg.lower():
+            error_msg = "Authentication error"
+        print(f"❌ OAuth error: {error_msg}")
+        # Only print traceback in debug mode
+        if app.debug:
+            import traceback
+            traceback.print_exc()
 
 @app.route("/logout")
 def logout():
@@ -677,7 +696,10 @@ def github_callback():
         print(f"✅ GitHub linked for user: {github_user['login']}")
         return redirect(url_for('main_page'))
     except Exception as e:
-        print(f"GitHub OAuth error: {e}")
+        error_msg = str(e)
+        if 'token' in error_msg.lower() or 'key' in error_msg.lower():
+            error_msg = "GitHub authentication error"
+        print(f"❌ GitHub OAuth error: {error_msg}")
         return redirect(url_for('main_page'))
 
 @app.route("/api/push-to-github", methods=["POST"])
@@ -688,12 +710,29 @@ def push_to_github():
         if 'github_token' not in session:
             return jsonify({'error': 'GitHub not linked. Please authenticate first.'}), 401
         
+        user_id = session.get('user_id')
+        project_id = session.get('current_project_id')
+        
+        if not project_id:
+            return jsonify({'error': 'No active project'}), 400
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
         data = request.get_json()
-        repo_name = data.get('repo_name', 'vibe-labs-project')
+        repo_name = data.get('repo_name', project.name.replace(' ', '-'))
         commit_message = data.get('commit_message', 'Add generated website files')
         
         github_token = session.get('github_token')
         github_username = session.get('github_username')
+        
+        # Get all files from database
+        files = ProjectFile.query.filter_by(project_id=project_id).all()
+        
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No files to push'}), 400
         
         # Initialize PyGithub
         from github import Github, GithubException
@@ -708,38 +747,46 @@ def push_to_github():
             # Create new repo
             repo = user.create_repo(
                 name=repo_name,
-                description='Generated website from Vibe Labs',
+                description=f'Generated website from Bad Coder - {project.name}',
                 private=False,
                 auto_init=True
             )
             print(f"✅ Created new repo: {repo_name}")
         
-        # Push all files from generated_files folder
-        if os.path.exists(GENERATED_FILES_DIR):
-            for filename in os.listdir(GENERATED_FILES_DIR):
-                filepath = os.path.join(GENERATED_FILES_DIR, filename)
-                if os.path.isfile(filepath):
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        file_content = f.read()
+        # Push each file from database directly to GitHub
+        for file in files:
+            try:
+                # Get file content
+                if file.content_binary:
+                    # Binary file (image) - encode to base64
+                    import base64
+                    file_content = base64.b64encode(file.content_binary).decode('utf-8')
+                else:
+                    # Text file
+                    file_content = file.content
+                
+                # Try to update existing file
+                try:
+                    contents = repo.get_contents(file.filename)
+                    repo.update_file(
+                        contents.path,
+                        f"Update {file.filename}",
+                        file_content,
+                        contents.sha
+                    )
+                    print(f"✅ Updated {file.filename}")
+                except GithubException:
+                    # File doesn't exist, create it
+                    repo.create_file(
+                        file.filename,
+                        f"Add {file.filename}",
+                        file_content
+                    )
+                    print(f"✅ Created {file.filename}")
                     
-                    try:
-                        # Try to update existing file
-                        contents = repo.get_contents(filename)
-                        repo.update_file(
-                            contents.path,
-                            f"Update {filename}",
-                            file_content,
-                            contents.sha
-                        )
-                        print(f"✅ Updated {filename}")
-                    except GithubException:
-                        # File doesn't exist, create it
-                        repo.create_file(
-                            filename,
-                            f"Add {filename}",
-                            file_content
-                        )
-                        print(f"✅ Created {filename}")
+            except Exception as file_err:
+                print(f"⚠️ Error pushing {file.filename}: {type(file_err).__name__}")
+                continue
         
         repo_url = f"https://github.com/{github_username}/{repo_name}"
         return jsonify({
@@ -750,8 +797,11 @@ def push_to_github():
         })
         
     except Exception as e:
-        print(f"Error pushing to GitHub: {e}")
-        return jsonify({'error': str(e)}), 500
+        error_msg = "Failed to push to GitHub"
+        if 'token' in str(e).lower():
+            error_msg = "GitHub authentication error"
+        print(f"❌ Error pushing to GitHub: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
 
 @app.route("/api/github-status")
 @login_required
@@ -1124,13 +1174,13 @@ Make this look like a PREMIUM website from 2024!"""
         # ===== END DATABASE STORAGE =====
 
     except Exception as e:
-    db.session.rollback()
-    # Log error without exposing sensitive data
-    error_msg = str(e)
-    if 'api' in error_msg.lower() and 'key' in error_msg.lower():
-        error_msg = "API configuration error. Please contact support."
-    print(f"❌ Generation error: {error_msg}")
-    return jsonify({"error": error_msg})
+        db.session.rollback()
+        # Log error without exposing sensitive data
+        error_msg = str(e)
+        if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+            error_msg = "API configuration error. Please contact support."
+        print(f"❌ Generation error: {error_msg}")
+        return jsonify({"error": error_msg})
 
     # ===== UPDATE USER CREDITS =====
     user.credits -= 1
@@ -1193,7 +1243,9 @@ def get_user_projects():
         
         return jsonify({'projects': result})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = "Failed to load projects"
+        print(f"❌ Error loading projects: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
 
 @app.route("/api/project/<int:project_id>", methods=["GET"])
 @login_required
@@ -1234,7 +1286,9 @@ def get_project_details(project_id):
             }
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = "Failed to load project details"
+        print(f"❌ Error loading project: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
     
 @app.route("/api/restore-files", methods=["POST"])
 @login_required
@@ -1260,7 +1314,9 @@ def restore_files():
         
         return jsonify({'success': True})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = "Failed to restore files"
+        print(f"❌ Error restoring files: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
     
 @app.route("/api/update-project-name", methods=["POST"])
 @login_required
@@ -1296,9 +1352,10 @@ def update_project_name():
         })
         
     except Exception as e:
-        print(f"Error updating project name: {e}")
+        error_msg = "Failed to update project name"
+        print(f"❌ Error updating project name: {type(e).__name__}")
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': error_msg}), 500
 
 @app.route("/reset")
 @login_required
@@ -1431,34 +1488,46 @@ def delete_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route("/api/file/<path:filename>")
-def get_file(filename):
-    abs_path = os.path.join(GENERATED_FILES_DIR, filename)
 
-    if not os.path.exists(abs_path):
-        return jsonify({"error": "File not found"}), 404
-
-    with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
-        return jsonify({"content": f.read()})
 
 
 @app.route("/api/download-zip", methods=["GET"])
 @login_required
 def download_zip():
-    """Creates and sends a ZIP file containing all generated files"""
+    """Creates and sends a ZIP file containing all files from database"""
     try:
+        user_id = session.get('user_id')
+        project_id = session.get('current_project_id')
+        
+        if not project_id:
+            return jsonify({'error': 'No active project'}), 404
+        
+        # Verify user owns this project
+        project = Project.query.filter_by(id=project_id, user_id=user_id).first()
+        if not project:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        # Get all files from database
+        files = ProjectFile.query.filter_by(project_id=project_id).all()
+        
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No files to download'}), 404
+        
+        # Create ZIP in memory
         memory_file = BytesIO()
         
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-            if os.path.exists(GENERATED_FILES_DIR):
-                for filename in os.listdir(GENERATED_FILES_DIR):
-                    file_path = os.path.join(GENERATED_FILES_DIR, filename)
-                    if os.path.isfile(file_path):
-                        zf.write(file_path, filename)
+            for file in files:
+                if file.content_binary:
+                    # Binary file (image)
+                    zf.writestr(file.filename, file.content_binary)
+                else:
+                    # Text file (HTML, CSS, JS)
+                    zf.writestr(file.filename, file.content.encode('utf-8'))
         
         memory_file.seek(0)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        zip_filename = f"vibe_labs_project_{timestamp}.zip"
+        zip_filename = f"{project.name}_{timestamp}.zip"
         
         return send_file(
             memory_file,
@@ -1468,7 +1537,9 @@ def download_zip():
         )
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = "Failed to create download package"
+        print(f"❌ Error creating zip: {type(e).__name__}")
+        return jsonify({'error': error_msg}), 500
     
 @app.route("/api/upload-file", methods=["POST"])
 def upload_images():
