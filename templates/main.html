@@ -415,80 +415,19 @@
     
     async function restoreProjectFiles(project, projectId) {
   try {
-    // STEP 1: Clear all previous state FIRST
-    console.log('🧹 Clearing previous project state...');
-    window.lastGeneratedCode = '';
-    if (typeof currentOpenFile !== 'undefined') currentOpenFile = null;
-    if (typeof currentPreviewFile !== 'undefined') currentPreviewFile = 'index.html';
+    console.log('✅ Project files already in database, no restore needed');
     
-    // STEP 2: Clear preview immediately
-    const previewFrame = document.getElementById('preview');
-    if (previewFrame) {
-      previewFrame.src = 'about:blank';
-    }
-    
-    // STEP 3: Clear code view
-    const codeView = document.getElementById('code-view');
-    if (codeView) {
-      codeView.textContent = '';
-    }
-    
-    // STEP 4: Show loading in file tree
-    const fileTreeEl = document.getElementById('file-tree');
-    if (fileTreeEl) {
-      fileTreeEl.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i> Loading files...</li>';
-    }
-    
-    // STEP 5: Send files to backend
-    console.log('📤 Sending files to backend...');
-    const response = await fetch('/api/restore-files', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        files: project.files,
-        project_id: projectId 
-      })
-    });
-    
-    if (!response.ok) {
-      console.error('Failed to restore files');
-      alert('Failed to load project. Please try again.');
-      return;
-    }
-    
-    console.log('✅ Files restored to backend');
-    
-    // STEP 6: Update project name
+    // Update project name in UI
     if (project.name) {
       localStorage.setItem('currentProjectName', project.name);
       const pageTitleInput = document.getElementById('page-title-input');
       if (pageTitleInput) {
         pageTitleInput.value = project.name;
-        if (typeof projectTitle !== 'undefined') {
-          window.projectTitle = project.name;
-        }
+        window.projectTitle = project.name;
       }
     }
-    
-    // STEP 7: Wait for backend to write files
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // STEP 8: Now load the NEW project preview
-    console.log('🎨 Loading new project preview...');
-    if (typeof loadPreview === 'function') {
-      loadPreview('index.html');
-    }
-    
-    // STEP 9: Refresh file tree with NEW files
-    if (typeof fetchAndRenderFiles === 'function') {
-      await fetchAndRenderFiles();
-    }
-    
-    console.log('✅ Project switch complete!');
-    
   } catch (err) {
-    console.error('Error restoring files:', err);
-    alert('Error loading project: ' + err.message);
+    console.error('Error setting up project:', err);
   }
 }
     
