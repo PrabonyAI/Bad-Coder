@@ -25,6 +25,26 @@ GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 GOOGLE_DISCOVERY_URL = os.getenv("GOOGLE_DISCOVERY_URL")
 SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS") == "True"
 
+# Validate that sensitive API keys are set
+import warnings
+
+if not GEMINI_API_KEY:
+    warnings.warn("⚠️ GEMINI_API_KEY not set in environment variables!")
+    
+if not ANTHROPIC_API_KEY:
+    warnings.warn("⚠️ ANTHROPIC_API_KEY not set in environment variables!")
+
+# CRITICAL: Never store API keys in session or log them
+if GEMINI_API_KEY:
+    print("✅ Gemini API key loaded (length: {})".format(len(GEMINI_API_KEY)))
+else:
+    print("❌ Gemini API key missing!")
+
+if ANTHROPIC_API_KEY:
+    print("✅ Anthropic API key loaded (length: {})".format(len(ANTHROPIC_API_KEY)))
+else:
+    print("❌ Anthropic API key missing!")
+
 
 # Database imports
 from models import db, User, Project, ProjectFile, ChatHistory, SessionRecord
@@ -91,6 +111,19 @@ IMAGE_CATEGORIES = {
 
 
 # --- Helper Functions ---
+
+def sanitize_session_for_logging(session_data):
+    """Remove sensitive data before logging session"""
+    safe_data = dict(session_data)
+    
+    # Remove sensitive keys
+    sensitive_keys = ['github_token', 'oauth_token', 'access_token']
+    for key in sensitive_keys:
+        if key in safe_data:
+            safe_data[key] = '***REDACTED***'
+    
+    return safe_data
+
 def login_required(f):
     """Decorator to require login"""
     from functools import wraps
@@ -776,6 +809,10 @@ def main_page():
 def generate():
     user_id = session.get('user_id')
     user = db.session.get(User, user_id)
+
+    # ADD THIS: Validate API key is available
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "API configuration error. Please contact support."}), 500
     
     if not user or user.credits <= 0:
         return jsonify({"error": "No credits left!"})
@@ -1087,8 +1124,13 @@ Make this look like a PREMIUM website from 2024!"""
         # ===== END DATABASE STORAGE =====
 
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)})
+    db.session.rollback()
+    # Log error without exposing sensitive data
+    error_msg = str(e)
+    if 'api' in error_msg.lower() and 'key' in error_msg.lower():
+        error_msg = "API configuration error. Please contact support."
+    print(f"❌ Generation error: {error_msg}")
+    return jsonify({"error": error_msg})
 
     # ===== UPDATE USER CREDITS =====
     user.credits -= 1
