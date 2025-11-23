@@ -74,6 +74,13 @@ Session(app)
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# ✅ ADD THESE CONNECTION POOL SETTINGS
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+    'pool_size': 10,
+    'max_overflow': 20,
+}
 
 # Initialize database
 db.init_app(app)
@@ -155,11 +162,12 @@ def get_or_create_user(email, name, picture=None):
     """Get existing user or create new one"""
     user = User.query.filter_by(email=email).first()
     if not user:
+        from datetime import datetime as dt, timezone
         user = User(
             email=email, 
             name=name, 
-            credits=3,  # Change to 3
-            last_credit_reset=datetime.utcnow()  # ADD THIS
+            credits=3,
+            last_credit_reset=dt.now(timezone.utc)  # ✅ FIXED
         )
         db.session.add(user)
         db.session.commit()
