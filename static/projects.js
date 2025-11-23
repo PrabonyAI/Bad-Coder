@@ -62,9 +62,9 @@ async function loadProjects(location) {
       return;
     }
     
-    // Render projects
+    // Render projects - UPDATED with loadProjectWithFeedback
     listEl.innerHTML = data.projects.map(project => `
-      <div class="project-item" onclick="loadProject(${project.id}, '${location}')">
+      <div class="project-item" onclick="loadProjectWithFeedback(${project.id}, '${location}')">
         <div class="project-item-name">${escapeHtml(project.name)}</div>
         <div class="project-item-preview">${escapeHtml(project.preview)}</div>
         <div class="project-item-date">
@@ -80,15 +80,77 @@ async function loadProjects(location) {
   }
 }
 
-async function loadProject(projectId, location) {
+// RACE CONDITION FIX: Add global flags
+let isProjectLoading = false;
+let projectLoadingTimeout = null;
+
+// NEW: Show loading indicator
+function showProjectLoadingIndicator() {
+  const existing = document.getElementById('project-loading-indicator');
+  if (existing) return; // Don't create duplicate
+  
+  const indicator = document.createElement('div');
+  indicator.id = 'project-loading-indicator';
+  indicator.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+  `;
+  indicator.innerHTML = `
+    <div style="
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    ">
+      <div style="margin-bottom: 15px;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #4a9eff;"></i>
+      </div>
+      <p style="margin: 0; font-size: 16px; font-weight: 500; color: #333;">Loading project...</p>
+      <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">Please wait</p>
+    </div>
+  `;
+  document.body.appendChild(indicator);
+}
+
+// NEW: Hide loading indicator
+function hideProjectLoadingIndicator() {
+  const indicator = document.getElementById('project-loading-indicator');
+  if (indicator) {
+    indicator.remove();
+  }
+}
+
+// NEW: Updated loadProject with race condition prevention
+async function loadProjectWithFeedback(projectId, location) {
   try {
+    // PREVENT RAPID SWITCHING: If already loading, ignore
+    if (isProjectLoading) {
+      console.log('⏳ Project already loading, ignoring rapid switch request');
+      return;
+    }
+    
+    isProjectLoading = true;
+    showProjectLoadingIndicator();
+    
     console.log(`🔄 Loading project ${projectId}...`);
     
     const res = await fetch(`/api/project/${projectId}`);
     const data = await res.json();
     
     if (data.error) {
+      hideProjectLoadingIndicator();
       alert('Failed to load project: ' + data.error);
+      isProjectLoading = false;
       return;
     }
     
@@ -99,13 +161,23 @@ async function loadProject(projectId, location) {
     sessionStorage.setItem('loadedProject', JSON.stringify(data.project));
     
     // CRITICAL: Set the project_id in backend session BEFORE redirecting
-    await fetch('/api/set-current-project', {
+    const setProjectRes = await fetch('/api/set-current-project', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ project_id: projectId })
     });
     
+    if (!setProjectRes.ok) {
+      hideProjectLoadingIndicator();
+      console.error('Failed to set current project on backend');
+      isProjectLoading = false;
+      return;
+    }
+    
     console.log(`✅ Set current project to ${projectId}`);
+    
+    // DELAY: Wait before redirecting to ensure backend is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // If on landing page, redirect to main
     if (location === 'overlay') {
@@ -115,9 +187,17 @@ async function loadProject(projectId, location) {
       window.location.reload();
     }
     
+    // Reset loading flag after timeout (safety measure)
+    projectLoadingTimeout = setTimeout(() => {
+      isProjectLoading = false;
+      hideProjectLoadingIndicator();
+    }, 5000);
+    
   } catch (err) {
+    hideProjectLoadingIndicator();
     console.error('Failed to load project:', err);
     alert('Failed to load project');
+    isProjectLoading = false;
   }
 }
 
