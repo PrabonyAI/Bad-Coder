@@ -199,14 +199,34 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script src="{{ url_for('static', filename='projects.js') }}"></script>
   
-  <!-- Load stacked cards animation when preview is blank -->
+  <!-- FIXED: Improved Preview Loading with Animation Clearing -->
   <script>
+    // Function to clear loading animation from preview iframe
+    function clearPreviewLoadingAnimation() {
+      const previewFrame = document.getElementById('preview');
+      if (!previewFrame) return;
+      
+      try {
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        if (doc && doc.body) {
+          const container = doc.querySelector('.container');
+          if (container) {
+            console.log('🧹 Clearing loading animation');
+            doc.body.innerHTML = '';
+          }
+        }
+      } catch (e) {
+        // Cross-origin or not accessible yet
+      }
+    }
+
     function loadPreviewLoadingAnimation() {
       const previewFrame = document.getElementById('preview');
       if (previewFrame) {
-        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        doc.open();
-        doc.write(`<!DOCTYPE html>
+        try {
+          const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+          doc.open();
+          doc.write(`<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -351,24 +371,64 @@
     </div>
 </body>
 </html>`);
-        doc.close();
+          doc.close();
+        } catch (e) {
+          console.error('Error loading animation:', e);
+        }
       }
     }
     
-    // Load animation on page load if preview is empty
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(() => {
-        const previewFrame = document.getElementById('preview');
-        try {
-          const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-          if (!doc.body || doc.body.children.length === 0) {
+    // Auto-load preview if files exist - FIXED VERSION
+    async function autoLoadPreviewIfFilesExist() {
+      try {
+        console.log('🔍 Checking for existing files...');
+        const filesResponse = await fetch('/api/files');
+        if (filesResponse.ok) {
+          const filesData = await filesResponse.json();
+          
+          if (filesData.files && filesData.files.length > 0) {
+            console.log('✅ Files detected, auto-loading preview...');
+            
+            // Load preview and files
+            const timestamp = new Date().getTime();
+            const previewFrame = document.getElementById('preview');
+            
+            if (previewFrame) {
+              // Set up onload handler to clear animation
+              previewFrame.onload = function() {
+                console.log('✅ Preview iframe loaded successfully');
+                clearPreviewLoadingAnimation();
+              };
+              
+              previewFrame.src = `/preview/index.html?t=${timestamp}`;
+            }
+            
+            await fetchAndRenderFiles();
+            showPreview();
+            
+            // Set active file
+            document.querySelectorAll('#file-tree li').forEach(li => {
+              li.classList.toggle('active-file', li.dataset.filename === 'index.html');
+            });
+            currentOpenFile = 'index.html';
+            if (currentFileNameEl) {
+              currentFileNameEl.textContent = 'index.html';
+            }
+          } else {
+            console.log('ℹ️ No files found, showing loading animation');
             loadPreviewLoadingAnimation();
           }
-        } catch (e) {
-          // If iframe is empty, load animation
-          loadPreviewLoadingAnimation();
         }
-      }, 500);
+      } catch (error) {
+        console.log('ℹ️ Error checking files:', error.message);
+        loadPreviewLoadingAnimation();
+      }
+    }
+    
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      autoLoadPreviewIfFilesExist();
     });
   </script>
   
@@ -414,22 +474,22 @@
     });
     
     async function restoreProjectFiles(project, projectId) {
-  try {
-    console.log('✅ Project files already in database, no restore needed');
-    
-    // Update project name in UI
-    if (project.name) {
-      localStorage.setItem('currentProjectName', project.name);
-      const pageTitleInput = document.getElementById('page-title-input');
-      if (pageTitleInput) {
-        pageTitleInput.value = project.name;
-        window.projectTitle = project.name;
+      try {
+        console.log('✅ Project files already in database, no restore needed');
+        
+        // Update project name in UI
+        if (project.name) {
+          localStorage.setItem('currentProjectName', project.name);
+          const pageTitleInput = document.getElementById('page-title-input');
+          if (pageTitleInput) {
+            pageTitleInput.value = project.name;
+            window.projectTitle = project.name;
+          }
+        }
+      } catch (err) {
+        console.error('Error setting up project:', err);
       }
     }
-  } catch (err) {
-    console.error('Error setting up project:', err);
-  }
-}
     
     function restoreChatHistory(chatHistory) {
       const chatBox = document.querySelector('.left-content');
@@ -437,7 +497,6 @@
       
       chatBox.innerHTML = '';
 
-      // Track the latest code
       let latestCode = '';
       
       chatHistory.forEach(chat => {
@@ -450,16 +509,14 @@
         `;
         chatBox.appendChild(userBubble);
         
-        // Update latestCode if this chat has generated_code
         if (chat.generated_code) {
           latestCode = chat.generated_code;
         }
       });
 
-      // NOW set window.lastGeneratedCode ONCE with the final value
       if (latestCode) {
         window.lastGeneratedCode = latestCode;
-        console.log('✅ Restored lastGeneratedCode:', latestCode.substring(0, 100) + '...');
+        console.log('✅ Restored lastGeneratedCode');
       }
       
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -478,73 +535,16 @@
       return div.innerHTML;
     }
 
-    // Initialize lastGeneratedCode from server-rendered history on page load
     window.addEventListener('DOMContentLoaded', () => {
-      // Check if there's a hidden-code element from server-rendered history
       const hiddenCodeEl = document.querySelector('.history-item .hidden-code');
       if (hiddenCodeEl && hiddenCodeEl.textContent.trim()) {
         window.lastGeneratedCode = hiddenCodeEl.textContent.trim();
-        console.log('✅ Initialized lastGeneratedCode from page:', window.lastGeneratedCode.substring(0, 100) + '...');
-      } else {
-        console.log('ℹ️ No existing code found on page');
+        console.log('✅ Initialized lastGeneratedCode from page');
       }
     });
-
   </script>
   
-  <script>
-  // Auto-load preview on page load if files exist
-  document.addEventListener('DOMContentLoaded', async function() {
-    try {
-      const response = await fetch('/api/files');
-      const data = await response.json();
-      
-      if (data.files && data.files.length > 0) {
-        console.log('✅ Files found, loading preview...');
-        
-        // Find index.html
-        const indexFile = data.files.find(f => f.name === 'index.html' || f.path === 'index.html');
-        if (indexFile) {
-          // Load preview immediately
-          const previewFrame = document.getElementById('preview');
-          if (previewFrame) {
-            previewFrame.src = '/preview/index.html?t=' + new Date().getTime();
-            console.log('✅ Preview loaded');
-          }
-          
-          // Also update code view with index.html content
-          try {
-            const fileRes = await fetch(`/api/file?filename=index.html`);
-            const fileData = await fileRes.json();
-            if (fileData.content) {
-              const codeView = document.getElementById('code-view');
-              if (codeView) {
-                codeView.textContent = fileData.content;
-                window.lastGeneratedCode = fileData.content;
-                console.log('✅ Code view updated');
-              }
-            }
-          } catch (err) {
-            console.log('ℹ️ Could not load code content');
-          }
-          
-          // Refresh file tree
-          if (typeof fetchAndRenderFiles === 'function') {
-            fetchAndRenderFiles();
-          }
-        }
-      } else {
-        // No files, show loading animation
-        console.log('ℹ️ No files found, showing loading animation');
-        loadPreviewLoadingAnimation();
-      }
-    } catch (error) {
-      console.error('Error loading preview:', error);
-      loadPreviewLoadingAnimation();
-    }
-  });
-</script>
-  
+  <!-- GitHub Modal -->
   <div id="github-modal" class="github-modal" style="display: none;">
     <div class="github-modal-content">
       <div class="github-modal-header">
