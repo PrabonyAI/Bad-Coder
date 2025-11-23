@@ -79,6 +79,30 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
+# AUTO-MIGRATE ON STARTUP (for production)
+with app.app_context():
+    try:
+        # Check if last_credit_reset column exists
+        from sqlalchemy import inspect, text
+        inspector = inspect(db.engine)
+        columns = [col['name'] for col in inspector.get_columns('users')]
+        
+        if 'last_credit_reset' not in columns:
+            print("🔧 Adding last_credit_reset column...")
+            with db.engine.connect() as conn:
+                conn.execute(text('ALTER TABLE users ADD COLUMN last_credit_reset TIMESTAMP'))
+                conn.commit()
+            
+            # Update existing users
+            users = User.query.all()
+            for user in users:
+                user.last_credit_reset = datetime.utcnow()
+                user.credits = 3
+            db.session.commit()
+            print("✅ Credit system migrated successfully")
+    except Exception as e:
+        print(f"ℹ️ Migration check: {e}")
+
 # OAuth configuration
 oauth = OAuth(app)
 google = oauth.register(
@@ -111,6 +135,24 @@ IMAGE_CATEGORIES = {
 
 
 # --- Helper Functions ---
+def check_and_reset_daily_credits(user):
+    """Reset credits to 3 if 24 hours have passed"""
+    from datetime import datetime, timedelta
+    
+    if not user.last_credit_reset:
+        user.last_credit_reset = datetime.utcnow()
+        db.session.commit()
+        return
+    
+    # Check if 24 hours have passed
+    time_since_reset = datetime.utcnow() - user.last_credit_reset
+    
+    if time_since_reset >= timedelta(hours=24):
+        # Reset credits to 3 (not add 3, but set to 3)
+        user.credits = 3
+        user.last_credit_reset = datetime.utcnow()
+        db.session.commit()
+        print(f"✅ Credits reset to 3 for user {user.email}")
 
 def sanitize_session_for_logging(session_data):
     """Remove sensitive data before logging session"""
@@ -138,9 +180,17 @@ def get_or_create_user(email, name, picture=None):
     """Get existing user or create new one"""
     user = User.query.filter_by(email=email).first()
     if not user:
-        user = User(email=email, name=name, credits=10)
+        user = User(
+            email=email, 
+            name=name, 
+            credits=3,  # Change to 3
+            last_credit_reset=datetime.utcnow()  # ADD THIS
+        )
         db.session.add(user)
         db.session.commit()
+    else:
+        # Check and reset credits if needed
+        check_and_reset_daily_credits(user)
     return user
 
 def generate_project_name(prompt):
@@ -890,15 +940,17 @@ def main_page():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
 
-    history = []  # Always load from database, never from session
+    history = []
 
     if user:
+        # CHECK AND RESET CREDITS DAILY
+        check_and_reset_daily_credits(user)
+        
         session['credits'] = user.credits
         
         current_project_id = session.get('current_project_id')
         
         if current_project_id:
-            # Load history from DATABASE only
             chat_history = ChatHistory.query.filter_by(
                 user_id=user_id, 
                 project_id=current_project_id
@@ -908,13 +960,13 @@ def main_page():
                 history.append({
                     'prompt': chat.prompt,
                     'description': chat.response,
-                    'generated_code': chat.generated_code[:500] + '...',  # Truncate for display
+                    'generated_code': chat.generated_code[:500] + '...',
                     'timestamp': chat.timestamp.isoformat() if chat.timestamp else None,
                     'created_files': chat.created_files
                 })
 
     project_name = session.get('current_project_name', 'New Project')
-    return render_template("main.html", credits=session.get('credits', 10), history=history, project_name=project_name)
+    return render_template("main.html", credits=session.get('credits', 3), history=history, project_name=project_name)
 
 
 # ===== COMPLETE /generate route with NOTHING REMOVED =====
@@ -927,6 +979,8 @@ def main_page():
 def generate():
     user_id = session.get('user_id')
     user = db.session.get(User, user_id)
+
+    check_and_reset_daily_credits(user)
 
     # ADD THIS: Validate API key is available
     if not GEMINI_API_KEY:
