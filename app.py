@@ -82,24 +82,32 @@ migrate = Migrate(app, db)
 # AUTO-MIGRATE ON STARTUP (for production)
 with app.app_context():
     try:
-        # Check if last_credit_reset column exists
         from sqlalchemy import inspect, text
         inspector = inspect(db.engine)
         columns = [col['name'] for col in inspector.get_columns('users')]
         
+        # Add column if it doesn't exist
         if 'last_credit_reset' not in columns:
             print("🔧 Adding last_credit_reset column...")
             with db.engine.connect() as conn:
                 conn.execute(text('ALTER TABLE users ADD COLUMN last_credit_reset TIMESTAMP'))
                 conn.commit()
-            
-            # Update existing users
-            users = User.query.all()
-            for user in users:
+        
+        # Update users with NULL last_credit_reset (including existing users)
+        users_to_update = User.query.filter(
+            (User.last_credit_reset == None) | (User.credits != 3)
+        ).all()
+        
+        if users_to_update:
+            print(f"🔧 Updating {len(users_to_update)} users to 3 credits...")
+            for user in users_to_update:
                 user.last_credit_reset = datetime.utcnow()
                 user.credits = 3
             db.session.commit()
             print("✅ Credit system migrated successfully")
+        else:
+            print("ℹ️ All users already have credit system enabled")
+            
     except Exception as e:
         print(f"ℹ️ Migration check: {e}")
 
