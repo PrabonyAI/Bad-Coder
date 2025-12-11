@@ -100,7 +100,7 @@ google = oauth.register(
 
 # --- configuration ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("models/gemini-2.0-flash")
+model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
 GENERATED_FILES_DIR = os.path.join(WORKSPACE_DIR, 'generated_files')
