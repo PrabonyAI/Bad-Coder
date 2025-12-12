@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, send_from_directory, redirect, url_for
+from flask_mail import Mail, Message
 from flask_session import Session
 import os, json, datetime, shutil
 import google.generativeai as genai
@@ -70,6 +71,17 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Initialize Flask-Session
 Session(app)
+
+# Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
+# Initialize Flask-Mail
+mail = Mail(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
