@@ -714,6 +714,60 @@ def index():
     session.pop('current_project_id', None)
     return render_template("index.html")
 
+@app.route("/about")
+def about():
+    """About page route"""
+    return render_template("about.html")
+
+@app.route("/pricing")
+def pricing():
+    """Pricing page route"""
+    return render_template("pricing.html")
+
+@app.route("/terms")
+def terms():
+    """Terms and Conditions page route"""
+    return render_template("terms.html")
+
+@app.route("/privacy")
+def privacy():
+    """Privacy Policy page route"""
+    return render_template("privacy.html")
+
+@app.route("/refund")
+def refund():
+    """Refund Policy page route"""
+    return render_template("refund.html")
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    """Contact page route with form handling"""
+    if request.method == "POST":
+        # Get form data
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        subject = request.form.get("subject", "").strip()
+        message = request.form.get("message", "").strip()
+        
+        # Basic validation
+        if not all([name, email, subject, message]):
+            return render_template("contact.html", error="All fields are required")
+        
+        # Here you can add logic to:
+        # 1. Send an email notification
+        # 2. Save to database
+        # 3. Send to a messaging service
+        
+        # For now, just log it
+        print(f"📧 Contact form submission from {name} ({email})")
+        print(f"Subject: {subject}")
+        print(f"Message: {message}")
+        
+        # Return success response
+        return render_template("contact.html", success=True)
+    
+    return render_template("contact.html")
+
 @app.route("/login")
 def login():
     """Initiate Google OAuth login"""
