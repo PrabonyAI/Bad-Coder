@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Bad Coder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+        }
+
+        /* Navigation Bar */
+        .landing-nav {
+            padding: 20px 48px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .landing-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-landing {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .brand-landing img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 40px 20px;
+        }
+
+        .content-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 60px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: #000000;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #000000;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        p {
+            line-height: 1.8;
+            color: #374151;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+        }
+
+        .contact-box {
+            background: #f9fafb;
+            padding: 32px;
+            border-radius: 12px;
+            margin-top: 40px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .contact-item {
+            display: flex;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: #000000;
+            color: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .contact-details {
+            flex: 1;
+        }
+
+        .contact-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+        }
+
+        .contact-value {
+            color: #000000;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .landing-nav {
+                padding: 16px 24px;
+            }
+
+            .nav-links {
+                gap: 16px;
+            }
+
+            .content-card {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="landing-nav">
+        <div class="landing-nav-content">
+            <a href="/" class="brand-landing">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Bad Coder Logo">
+                <span>Bad Coder</span>
+            </a>
+            <div class="nav-links">
+                <a href="/pricing" class="nav-link">Pricing</a>
+                <a href="/about" class="nav-link">About</a>
+                <a href="/terms" class="nav-link">Terms</a>
+                <a href="/privacy" class="nav-link">Privacy</a>
+                <a href="/contact" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container">
+        <div class="content-card">
+            <span class="badge">About Us</span>
+            <h1>Bad Coder</h1>
+            
+            <p>Welcome to Bad Coder, the AI-powered platform designed to revolutionize how code is written. We bridge the gap between creative ideas and production-ready applications through advanced "vibecoding" technology.</p>
+            
+            <p>Our mission is simple: to empower developers and creators to build faster, smarter, and with more intuition. By leveraging state-of-the-art AI models, we allow you to turn natural language prompts into functional software in seconds.</p>
+
+            <h2>Our Operations</h2>
+            <p>We are a dedicated team of AI researchers and engineers based in India, committed to pushing the boundaries of generative AI in software development.</p>
+
+            <div class="contact-box">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-details">
+                        <div class="contact-label">Email</div>
+                        <div class="contact-value">info@prabonyai.in</div>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-details">
+                        <div class="contact-label">Location</div>
+                        <div class="contact-value">Noida, Uttar Pradesh, India</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

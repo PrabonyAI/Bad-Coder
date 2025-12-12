@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Plans | Bad Coder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+        }
+
+        /* Navigation Bar */
+        .landing-nav {
+            padding: 20px 48px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .landing-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-landing {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .brand-landing img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.25rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 48px 40px;
+            text-align: left;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card.featured {
+            border-color: #000000;
+            border-width: 3px;
+        }
+
+        .tag {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #000000;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-bottom-left-radius: 12px;
+            border-top-right-radius: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 12px;
+        }
+
+        .plan-description {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .price-container {
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #000000;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .currency {
+            font-size: 2rem;
+            color: #6b7280;
+        }
+
+        .period {
+            font-size: 1.125rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .total-billed {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 40px;
+            flex: 1;
+        }
+
+        .features li {
+            margin-bottom: 16px;
+            color: #374151;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.6;
+        }
+
+        .features li i {
+            color: #000000;
+            font-size: 16px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+        }
+
+        .btn-outline:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-primary {
+            background: #000000;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1f2937;
+            transform: translateY(-2px);
+        }
+
+        .footer-note {
+            margin-top: 60px;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .landing-nav {
+                padding: 16px 24px;
+            }
+
+            .nav-links {
+                gap: 16px;
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="landing-nav">
+        <div class="landing-nav-content">
+            <a href="/" class="brand-landing">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Bad Coder Logo">
+                <span>Bad Coder</span>
+            </a>
+            <div class="nav-links">
+                <a href="/pricing" class="nav-link">Pricing</a>
+                <a href="/about" class="nav-link">About</a>
+                <a href="/terms" class="nav-link">Terms</a>
+                <a href="/privacy" class="nav-link">Privacy</a>
+                <a href="/contact" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container">
+        <div class="header">
+            <h1>Simple, Transparent Pricing</h1>
+            <p class="subtitle">Choose the plan that works best for you</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Monthly Plan -->
+            <div class="card">
+                <h3 class="plan-title">Monthly</h3>
+                <p class="plan-description">Perfect for getting started and exploring the platform</p>
+                
+                <div class="price-container">
+                    <div class="price">
+                        <span class="currency">₹</span>2,000
+                        <span class="period">/mo</span>
+                    </div>
+                    <p class="total-billed">Billed monthly</p>
+                </div>
+                
+                <ul class="features">
+                    <li><i class="fas fa-check-circle"></i> 100 Credits per month</li>
+                    <li><i class="fas fa-check-circle"></i> Access to all Beta features</li>
+                    <li><i class="fas fa-check-circle"></i> Standard Generation Speed</li>
+                    <li><i class="fas fa-check-circle"></i> Community Support</li>
+                    <li><i class="fas fa-check-circle"></i> Code Export & Download</li>
+                    <li><i class="fas fa-check-circle"></i> Project History</li>
+                </ul>
+
+                <button class="btn btn-outline">Get Started</button>
+            </div>
+
+            <!-- Annual Plan -->
+            <div class="card featured">
+                <div class="tag">BEST VALUE</div>
+                <h3 class="plan-title">Annual</h3>
+                <p class="plan-description">Save 20% with our yearly subscription</p>
+                
+                <div class="price-container">
+                    <div class="price">
+                        <span class="currency">₹</span>23,988
+                        <span class="period">/yr</span>
+                    </div>
+                    <p class="total-billed">Equivalent to ₹1,999/mo — Save ₹24,012</p>
+                </div>
+                
+                <ul class="features">
+                    <li><i class="fas fa-check-circle"></i> 100 Credits per month</li>
+                    <li><i class="fas fa-check-circle"></i> Priority Processing</li>
+                    <li><i class="fas fa-check-circle"></i> Early Access to New Models</li>
+                    <li><i class="fas fa-check-circle"></i> Premium Email Support</li>
+                    <li><i class="fas fa-check-circle"></i> Advanced Code Features</li>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Project History</li>
+                </ul>
+
+                <button class="btn btn-primary">Get Started</button>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <p>All prices are in Indian Rupees (INR) and inclusive of applicable taxes.</p>
+        </div>
+    </div>
+
+</body>
+</html>
