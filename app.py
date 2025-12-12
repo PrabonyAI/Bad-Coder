@@ -753,21 +753,48 @@ def contact():
         if not all([name, email, subject, message]):
             return render_template("contact.html", error="All fields are required")
         
-        # Here you can add logic to:
-        # 1. Send an email notification
-        # 2. Save to database
-        # 3. Send to a messaging service
+        # Validate email format
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            return render_template("contact.html", error="Invalid email address")
         
-        # For now, just log it
-        print(f"📧 Contact form submission from {name} ({email})")
-        print(f"Subject: {subject}")
-        print(f"Message: {message}")
-        
-        # Return success response
-        return render_template("contact.html", success=True)
+        try:
+            # Send email notification
+            msg = Message(
+                subject=f"Contact Form: {subject}",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=['info@prabonyai.in']
+            )
+            msg.body = f"""
+New Contact Form Submission
+
+From: {name}
+Email: {email}
+Subject: {subject}
+
+Message:
+{message}
+
+---
+Sent from Bad Coder Contact Form
+            """
+            
+            mail.send(msg)
+            
+            # Log success
+            print(f"✅ Email sent successfully from {name} ({email})")
+            
+            # Return success response
+            return render_template("contact.html", success=True)
+            
+        except Exception as e:
+            # Log error without exposing details
+            print(f"❌ Email sending failed: {type(e).__name__}")
+            return render_template("contact.html", error="Failed to send message. Please try again later or email us directly at info@prabonyai.in")
     
     return render_template("contact.html")
-
+    
 @app.route("/login")
 def login():
     """Initiate Google OAuth login"""
