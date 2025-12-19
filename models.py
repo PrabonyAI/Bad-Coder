@@ -20,12 +20,12 @@ class User(db.Model):
     subscription_end_date = db.Column(db.DateTime, nullable=True)
 
     def has_active_subscription(self):
-    """Check if user has active paid subscription"""
-    if self.subscription_status != 'active':
-        return False
-    if not self.subscription_end_date:
-        return False
-    return datetime.now(timezone.utc) < self.subscription_end_date
+        """Check if user has active paid subscription"""
+        if self.subscription_status != 'active':
+            return False
+        if not self.subscription_end_date:
+            return False
+        return datetime.now(timezone.utc) < self.subscription_end_date
     
     # Relationships
     projects = db.relationship('Project', backref='user', lazy=True, cascade='all, delete-orphan')
