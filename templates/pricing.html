@@ -358,9 +358,76 @@
             <p>All prices are in Indian Rupees (INR) and inclusive of applicable taxes.</p>
         </div>
     </div>
-
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+async function initiatePurchase(planType) {
+    try {
+        // Create order
+        const orderRes = await fetch('/api/create-razorpay-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan_type: planType })
+        });
+        
+        const orderData = await orderRes.json();
+        
+        if (!orderData.success) {
+            alert('Failed to create order. Please try again.');
+            return;
+        }
+        
+        // Open Razorpay Checkout
+        const options = {
+            key: orderData.key_id,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: 'Bad Coder',
+            description: planType === 'monthly' ? 'Monthly Plan' : 'Annual Plan',
+            image: '/static/logo.png',
+            order_id: orderData.order_id,
+            handler: async function(response) {
+                // Verify payment
+                const verifyRes = await fetch('/api/verify-razorpay-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        plan_type: planType
+                    })
+                });
+                
+                const verifyData = await verifyRes.json();
+                
+                if (verifyData.success) {
+                    alert('✅ Payment Successful! Your subscription is now active.');
+                    window.location.href = '/main';
+                } else {
+                    alert('❌ Payment verification failed. Please contact support.');
+                }
+            },
+            prefill: {
+                name: '{{ session.get("user_name", "") }}',
+                email: '{{ session.get("user_email", "") }}'
+            },
+            theme: {
+                color: '#000000'
+            }
+        };
+        
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Payment failed. Please try again.');
+    }
+}
+</script>
 </body>
 
 </html>
+
 
 
