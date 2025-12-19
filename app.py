@@ -2030,6 +2030,158 @@ def set_current_project():
         print(f"❌ Error setting project: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+# ===== RAZORPAY PAYMENT ROUTES =====
+
+@app.route("/api/create-razorpay-order", methods=["POST"])
+@login_required
+def create_razorpay_order():
+    """Create Razorpay order for payment"""
+    try:
+        data = request.get_json()
+        plan_type = data.get('plan_type')  # 'monthly' or 'annual'
+        
+        # Define amounts (in paise - ₹2000 = 200000 paise)
+        amounts = {
+            'monthly': 200000,  # ₹2,000
+            'annual': 2398800   # ₹23,988
+        }
+        
+        if plan_type not in amounts:
+            return jsonify({'error': 'Invalid plan type'}), 400
+        
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        
+        # Create Razorpay Order
+        order_data = {
+            'amount': amounts[plan_type],
+            'currency': 'INR',
+            'receipt': f'order_{user_id}_{int(datetime.datetime.now().timestamp())}',
+            'notes': {
+                'user_id': str(user_id),
+                'email': user.email,
+                'plan_type': plan_type
+            }
+        }
+        
+        order = razorpay_client.order.create(data=order_data)
+        
+        return jsonify({
+            'success': True,
+            'order_id': order['id'],
+            'amount': order['amount'],
+            'currency': order['currency'],
+            'key_id': RAZORPAY_KEY_ID
+        })
+        
+    except Exception as e:
+        print(f"❌ Error creating order: {e}")
+        return jsonify({'error': 'Failed to create order'}), 500
+
+
+@app.route("/api/verify-razorpay-payment", methods=["POST"])
+@login_required
+def verify_razorpay_payment():
+    """Verify payment signature and activate subscription"""
+    try:
+        data = request.get_json()
+        
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_signature = data.get('razorpay_signature')
+        plan_type = data.get('plan_type')
+        
+        # Verify signature
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode(),
+            f"{razorpay_order_id}|{razorpay_payment_id}".encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if generated_signature != razorpay_signature:
+            return jsonify({'error': 'Invalid payment signature'}), 400
+        
+        # Payment verified - Activate subscription
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        
+        user.subscription_status = 'active'
+        user.subscription_plan = plan_type
+        user.subscription_start_date = datetime.datetime.now(timezone.utc)
+        
+        # Set end date
+        if plan_type == 'monthly':
+            user.subscription_end_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=30)
+            user.credits += 100
+        else:  # annual
+            user.subscription_end_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=365)
+            user.credits += 1200
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Subscription activated successfully!',
+            'credits': user.credits,
+            'plan': plan_type
+        })
+        
+    except Exception as e:
+        print(f"❌ Error verifying payment: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Payment verification failed'}), 500
+
+
+@app.route("/api/razorpay-webhook", methods=["POST"])
+def razorpay_webhook():
+    """Handle Razorpay webhook notifications"""
+    try:
+        webhook_signature = request.headers.get('X-Razorpay-Signature')
+        webhook_body = request.get_data()
+        
+        # Verify webhook signature
+        razorpay_client.utility.verify_webhook_signature(
+            webhook_body.decode('utf-8'),
+            webhook_signature,
+            RAZORPAY_WEBHOOK_SECRET
+        )
+        
+        data = request.get_json()
+        event = data.get('event')
+        
+        # Handle different events
+        if event == 'payment.captured':
+            payment = data.get('payload', {}).get('payment', {}).get('entity', {})
+            order_id = payment.get('order_id')
+            
+            # Find and update user
+            order = razorpay_client.order.fetch(order_id)
+            user_id = int(order.get('notes', {}).get('user_id', 0))
+            
+            if user_id:
+                user = User.query.get(user_id)
+                if user and user.subscription_status != 'active':
+                    plan_type = order.get('notes', {}).get('plan_type', 'monthly')
+                    
+                    user.subscription_status = 'active'
+                    user.subscription_plan = plan_type
+                    user.subscription_start_date = datetime.datetime.now(timezone.utc)
+                    
+                    if plan_type == 'monthly':
+                        user.subscription_end_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=30)
+                    else:
+                        user.subscription_end_date = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=365)
+                    
+                    user.credits = 100
+                    db.session.commit()
+        
+        return jsonify({'status': 'success'}), 200
+        
+    except Exception as e:
+        print(f"❌ Webhook error: {e}")
+        return jsonify({'status': 'error'}), 400
+
 # --- End File API ---
 
 
