@@ -12,6 +12,20 @@ class User(db.Model):
     credits = db.Column(db.Integer, default=3)
     last_credit_reset = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    razorpay_customer_id = db.Column(db.String(255), nullable=True)
+    razorpay_subscription_id = db.Column(db.String(255), nullable=True)
+    subscription_status = db.Column(db.String(50), default='free')
+    subscription_plan = db.Column(db.String(50), nullable=True)
+    subscription_start_date = db.Column(db.DateTime, nullable=True)
+    subscription_end_date = db.Column(db.DateTime, nullable=True)
+
+    def has_active_subscription(self):
+    """Check if user has active paid subscription"""
+    if self.subscription_status != 'active':
+        return False
+    if not self.subscription_end_date:
+        return False
+    return datetime.now(timezone.utc) < self.subscription_end_date
     
     # Relationships
     projects = db.relationship('Project', backref='user', lazy=True, cascade='all, delete-orphan')
